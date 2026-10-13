@@ -331,7 +331,7 @@ canvas.qr{width:96px;height:96px;image-rendering:pixelated;background:#fff;borde
    reads/writes DB through small functions, so the backend team can map
    each collection to a table and each action to an API call.
    ===================================================================== */
-const STORE_KEY='cadcf-portal-ui-v1';
+const STORE_KEY='cadcf-portal-ui-v2';
 const DAY=86400000;
 const T0=(()=>{const t=new Date();t.setHours(0,0,0,0);return t})();
 const iso=d=>{const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')};
@@ -377,8 +377,8 @@ const STAGES=['Apply','Eligibility','Payment','Written test','Lecture','Intervie
 function seed(){
  const DB={};
  DB.settings={
-  accessFee:{INR:2500,USD:35}, gst:18, passMonths:12, validityYears:3,
-  fees:{basic:{INR:10000,USD:120},advanced:{INR:15000,USD:180},leadership:{INR:20000,USD:240}},
+  accessFee:{INR:2500,USD:25}, gst:18, passMonths:12, validityYears:3,
+  fees:{basic:{INR:18000,USD:190},advanced:{INR:24000,USD:250},leadership:{INR:30000,USD:310}},
   writtenPass:60, panelPass:3.0, aiFlag:70, retakeDays:30, holdDays:30, minPanel:3, maxPanel:5,
   stages:{basic:{written:true,project:false,lecture:true,simulator:false,interview:true},
           advanced:{written:true,project:true,lecture:true,simulator:true,interview:true},
@@ -460,14 +460,14 @@ function seed(){
  const P=(id,user,item,cur,amt,n,status,gw)=>({id,user,item,currency:cur,amount:amt,tax:cur==='INR'?Math.round(amt*0.18):0,at:ts(n,12),status,gateway:gw||(cur==='INR'?'Razorpay':'Stripe'),invoice:'ISF/CADCF/26-27/'+id.slice(-4)});
  DB.payments=[
   P('PAY-0091','u1','Access pass','INR',2500,-35,'captured'),
-  P('PAY-0092','u2','Access pass','USD',35,-60,'captured'),
+  P('PAY-0092','u2','Access pass','USD',25,-60,'captured'),
   P('PAY-0093','u3','Access pass','INR',2500,-90,'captured'),
-  P('PAY-0094','u3','Basic certification','INR',10000,-25,'captured'),
-  P('PAY-0095','u4','Advanced certification','USD',180,-75,'captured'),
-  P('PAY-0096','u7','Basic certification','INR',10000,-36,'captured'),
-  P('PAY-0097','u8','Access pass','USD',35,-20,'captured'),
-  P('PAY-0098','u10','Advanced certification','INR',15000,-90,'captured'),
-  P('PAY-0099','u12','Basic certification','INR',10000,-46,'captured'),
+  P('PAY-0094','u3','Basic certification','INR',18000,-25,'captured'),
+  P('PAY-0095','u4','Advanced certification','USD',250,-75,'captured'),
+  P('PAY-0096','u7','Basic certification','INR',18000,-36,'captured'),
+  P('PAY-0097','u8','Access pass','USD',25,-20,'captured'),
+  P('PAY-0098','u10','Advanced certification','INR',24000,-90,'captured'),
+  P('PAY-0099','u12','Basic certification','INR',18000,-46,'captured'),
   P('PAY-0100','u13','Access pass','INR',2500,-45,'refund_requested'),
   P('PAY-0101','u9','Access pass','INR',2500,-30,'captured'),
   P('PAY-0102','u6','Access pass','INR',2500,-1,'failed')
