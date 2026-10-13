@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="UX blueprint for the upgraded CADCF portal: public site, faculty, ISF admin and assessor screens, and build spec.">
+<title>CADCF Portal Blueprint</title>
+<style>[hidden]{display:none!important} body{margin:0} img{max-width:100%}</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: app shell — sticky role switcher, then per-role sidebar of screens + working canvas. Chart-paper neutrals, navy ink, teal action colour, brass reserved for Leadership. */
+:root{
+  --bg:#F3F6F8; --surface:#FFFFFF; --sunk:#E9EEF2; --ink:#13212E; --muted:#56687A; --line:#D5DDE4;
+  --navy:#0E2A47; --accent:#17766A; --accent-ink:#FFFFFF; --accent-soft:#DDF0EC;
+  --basic:#2F64A0; --adv:#17766A; --lead:#9A6A12;
+  --ok:#2E7D4F; --ok-soft:#E0F1E6; --warn:#A8660B; --warn-soft:#FBEFD9; --bad:#B3261E; --bad-soft:#FBE3E1;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C131A; --surface:#131D27; --sunk:#0F1820; --ink:#E3EAF0; --muted:#94A5B5; --line:#25323F;
+  --navy:#A9C6E4; --accent:#45B3A2; --accent-ink:#06201C; --accent-soft:#163631;
+  --basic:#7FA9DA; --adv:#45B3A2; --lead:#D9A84A;
+  --ok:#5DBB83; --ok-soft:#14301F; --warn:#E0A64A; --warn-soft:#33260F; --bad:#F07A70; --bad-soft:#3A1715; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C131A; --surface:#131D27; --sunk:#0F1820; --ink:#E3EAF0; --muted:#94A5B5; --line:#25323F;
+  --navy:#A9C6E4; --accent:#45B3A2; --accent-ink:#06201C; --accent-soft:#163631;
+  --basic:#7FA9DA; --adv:#45B3A2; --lead:#D9A84A;
+  --ok:#5DBB83; --ok-soft:#14301F; --warn:#E0A64A; --warn-soft:#33260F; --bad:#F07A70; --bad-soft:#3A1715; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14.5px;line-height:1.55}
+h1,h2,h3,h4{font-family:var(--f-display);color:var(--navy);text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:clamp(1.7rem,3.6vw,2.6rem);font-weight:700}
+h2{font-size:1.45rem;font-weight:700}
+h3{font-size:1.1rem;font-weight:700}
+h4{font-size:.95rem;font-weight:600}
+p{margin:0}
+a{color:var(--accent)}
+small,.muted{color:var(--muted)}
+.mono{font-family:var(--f-mono);font-size:.86em}
+.eyebrow{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+/* top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--navy);color:#fff;padding-inline:16px}
+:root[data-theme="dark"] .topbar{background:#0A1F35}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .topbar{background:#0A1F35}}
+.topbar-in{max-width:1320px;margin:0 auto;display:flex;align-items:center;gap:18px;padding-block:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;color:#fff}
+.brand b{font-family:var(--f-display);font-size:1.15rem;letter-spacing:.02em}
+.brand span{font-family:var(--f-mono);font-size:.7rem;opacity:.7;letter-spacing:.06em}
+.roles{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0}
+.roles button{background:transparent;border:1px solid transparent;color:#C9D7E6;padding:6px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;font-size:.88rem}
+.roles button:hover{color:#fff;border-color:rgba(255,255,255,.25)}
+.roles button[aria-selected="true"]{background:#fff;color:#0E2A47;font-weight:600}
+
+.wrap{max-width:1320px;margin:0 auto;padding-inline:16px;padding-block:24px 64px}
+.view[hidden]{display:none}
+
+/* generic */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:500;font-size:.9rem;text-decoration:none;color:var(--ink)}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.sm{padding:4px 10px;font-size:.8rem}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:.74rem;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.acc{background:var(--accent-soft);color:var(--accent)}
+.chip.ph{background:transparent;border:1px dashed var(--warn);color:var(--warn);font-weight:500}
+.lv{font-family:var(--f-mono);font-size:.7rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:4px;border:1px solid currentColor}
+.lv.b{color:var(--basic)} .lv.a{color:var(--adv)} .lv.l{color:var(--lead)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:currentColor}
+hr{border:0;border-top:1px solid var(--line);margin:0}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;background:var(--sunk)}
+tr:last-child td{border-bottom:0}
+tbody tr.click{cursor:pointer} tbody tr.click:hover{background:var(--sunk)}
+label{font-size:.82rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px}
+input[type=text],input[type=email],input[type=number],input[type=date],select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+textarea{min-height:120px;resize:vertical}
+.note{border-left:3px solid var(--warn);background:var(--warn-soft);padding:12px 14px;border-radius:0 6px 6px 0;font-size:.9rem}
+.note.info{border-color:var(--accent);background:var(--accent-soft)}
+.note.bad{border-color:var(--bad);background:var(--bad-soft)}
+.ux{font-size:.82rem;color:var(--muted);border:1px dashed var(--line);border-radius:6px;padding:8px 10px;background:var(--sunk)}
+.ux b{color:var(--ink);font-family:var(--f-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;margin-right:6px}
+
+/* role shell */
+.shell{display:grid;grid-template-columns:230px minmax(0,1fr);gap:22px;align-items:start}
+.side{position:sticky;top:76px;display:flex;flex-direction:column;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px}
+.side .who{padding:6px 8px 10px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.side button{all:unset;cursor:pointer;padding:7px 10px;border-radius:6px;font-size:.88rem;display:flex;justify-content:space-between;gap:8px;color:var(--ink)}
+.side button:hover{background:var(--sunk)}
+.side button[aria-selected="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.side button:focus-visible{outline:2px solid var(--accent)}
+.side .grp{font-family:var(--f-mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:10px 10px 4px}
+.screen[hidden]{display:none}
+.screen{display:flex;flex-direction:column;gap:18px;min-width:0}
+.scr-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-end}
+@media (max-width:860px){
+  .shell{grid-template-columns:1fr}
+  .side{position:static;flex-direction:row;overflow-x:auto;padding:6px}
+  .side .who,.side .grp{display:none}
+  .side button{white-space:nowrap}
+}
+
+/* journey */
+.journey{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;counter-reset:st}
+.jst{position:relative;padding:14px 12px 14px 14px;border-top:3px solid var(--line);font-size:.84rem}
+.jst .k{font-family:var(--f-mono);font-size:.7rem;color:var(--muted)}
+.jst.done{border-color:var(--ok)} .jst.now{border-color:var(--accent);background:var(--accent-soft)}
+.jst b{display:block;color:var(--ink);font-size:.9rem;margin-block:2px}
+
+/* public site */
+.site{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.site-nav{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 22px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.site-nav nav{display:flex;gap:16px;flex-wrap:wrap;font-size:.88rem}
+.site-nav nav a{color:var(--ink);text-decoration:none}
+.hero{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:28px;padding:40px 28px;background:linear-gradient(180deg,var(--sunk),var(--surface))}
+@media(max-width:820px){.hero{grid-template-columns:1fr}}
+.hero p.lead{font-size:1.05rem;color:var(--muted);max-width:56ch;margin-top:12px}
+.seal{border:1px solid var(--line);border-radius:10px;padding:18px;background:var(--surface);display:flex;flex-direction:column;gap:10px}
+.compass{font-family:var(--f-mono);font-size:.76rem;color:var(--muted);display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.compass div{border:1px solid var(--line);border-radius:6px;padding:8px 6px;text-align:center}
+.compass b{display:block;font-family:var(--f-display);font-size:1.3rem;color:var(--navy)}
+.sec{padding:30px 28px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:16px}
+.lvcard{border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:10px;background:var(--surface)}
+.lvcard.b{border-top:4px solid var(--basic)} .lvcard.a{border-top:4px solid var(--adv)} .lvcard.l{border-top:4px solid var(--lead)}
+.lvcard ul{margin:0;padding-left:18px;font-size:.88rem}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.steps div{border:1px solid var(--line);border-radius:8px;padding:12px;font-size:.86rem}
+.steps i{font-style:normal;font-family:var(--f-mono);font-size:.72rem;color:var(--accent)}
+details{border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:var(--surface)}
+summary{cursor:pointer;font-weight:600}
+details p{margin-top:8px;color:var(--muted)}
+
+/* standard viewer */
+.viewer{display:grid;grid-template-columns:240px minmax(0,1fr);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+@media(max-width:760px){.viewer{grid-template-columns:1fr}}
+.toc{background:var(--sunk);padding:12px;font-size:.84rem;display:flex;flex-direction:column;gap:4px;max-height:520px;overflow:auto}
+.toc a{color:var(--ink);text-decoration:none;padding:4px 6px;border-radius:4px}
+.toc a.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.page{position:relative;padding:26px 30px;min-height:420px;overflow:hidden;user-select:none}
+.page .wm{position:absolute;inset:0;pointer-events:none;display:grid;place-items:center;opacity:.08;font-family:var(--f-mono);font-size:1.1rem;transform:rotate(-24deg);white-space:pre;text-align:center;color:var(--ink)}
+.vtool{display:flex;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);font-size:.8rem;color:var(--muted);flex-wrap:wrap}
+
+/* video */
+.vid{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.vid .thumb{aspect-ratio:16/9;max-width:100%;background:linear-gradient(135deg,var(--navy),var(--accent));display:grid;place-items:center;color:#fff;font-family:var(--f-mono);font-size:.8rem;position:relative}
+.vid .thumb::after{content:"";width:0;height:0;border-left:18px solid rgba(255,255,255,.9);border-top:11px solid transparent;border-bottom:11px solid transparent}
+.vid .thumb span{position:absolute;right:8px;bottom:6px}
+.vid .meta{padding:10px 12px;font-size:.84rem;display:flex;flex-direction:column;gap:4px}
+.bar{height:6px;background:var(--sunk);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+
+/* level picker */
+.pick{cursor:pointer;position:relative}
+.pick input{position:absolute;opacity:0}
+.pick .lvcard{transition:box-shadow .15s}
+.pick input:checked + .lvcard{box-shadow:0 0 0 2px var(--accent)}
+.pick input:focus-visible + .lvcard{outline:2px solid var(--accent);outline-offset:2px}
+.pick input:disabled + .lvcard{opacity:.55}
+
+/* modal (dummy gateway) */
+.modal-bg{position:fixed;inset:0;background:rgba(8,16,24,.55);display:grid;place-items:center;z-index:50;padding:16px}
+.modal{background:var(--surface);border-radius:12px;width:min(460px,100%);max-height:90vh;overflow:auto;border:1px solid var(--line)}
+.modal header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.modal .body{padding:18px;display:flex;flex-direction:column;gap:12px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{all:unset;cursor:pointer;padding:8px 12px;font-size:.86rem;border-bottom:2px solid transparent}
+.tabs button[aria-selected="true"]{border-color:var(--accent);color:var(--accent);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{all:unset;cursor:pointer;padding:6px 12px;font-size:.84rem}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.sum td{border:0;padding:4px 0} .sum td:last-child{text-align:right}
+.sum tr.tot td{border-top:1px solid var(--line);padding-top:8px;font-weight:700}
+
+/* exam */
+.exam{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px}
+@media(max-width:860px){.exam{grid-template-columns:1fr}}
+.qnav{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.qnav span{font-family:var(--f-mono);font-size:.74rem;border:1px solid var(--line);border-radius:4px;text-align:center;padding:4px 0}
+.qnav span.a{background:var(--accent-soft);border-color:var(--accent)}
+.qnav span.c{outline:2px solid var(--accent)}
+.opt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:6px;padding:10px 12px;cursor:pointer}
+.opt:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.integrity{display:flex;flex-direction:column;gap:8px;font-size:.84rem}
+.meter{height:10px;border-radius:5px;background:linear-gradient(90deg,var(--ok) 0 40%,var(--warn) 40% 70%,var(--bad) 70%);position:relative}
+.meter i{position:absolute;top:-4px;width:3px;height:18px;background:var(--ink);border-radius:2px;transition:left .4s}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:.88rem;z-index:60;max-width:calc(100% - 32px)}
+
+/* slots */
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.slot{all:unset;cursor:pointer;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:.82rem;text-align:left;background:var(--surface)}
+.slot b{display:block;font-family:var(--f-mono);font-size:.8rem}
+.slot[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.slot[disabled]{opacity:.45;cursor:not-allowed;text-decoration:line-through}
+
+/* kpis */
+.kpi{display:flex;flex-direction:column;gap:2px}
+.kpi b{font-family:var(--f-display);font-size:1.7rem;color:var(--navy);font-variant-numeric:tabular-nums}
+.funnel{display:flex;flex-direction:column;gap:6px;font-size:.82rem}
+.funnel div{display:grid;grid-template-columns:150px minmax(0,1fr) 44px;gap:10px;align-items:center}
+.funnel i{display:block;height:14px;background:var(--accent);border-radius:3px;opacity:.85}
+
+/* drawer */
+.drawer{border:1px solid var(--accent);border-radius:var(--r);background:var(--surface);padding:18px;display:flex;flex-direction:column;gap:14px}
+.kv{display:grid;grid-template-columns:150px minmax(0,1fr);gap:6px 12px;font-size:.86rem}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:.86rem}
+.check .ic{flex:none;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:.7rem;font-weight:700;color:#fff}
+.ic.ok{background:var(--ok)} .ic.warn{background:var(--warn)} .ic.bad{background:var(--bad)}
+
+/* rubric */
+.rub{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 14px;align-items:center;font-size:.86rem}
+.rub .sc{display:flex;gap:4px}
+.rub .sc button{all:unset;cursor:pointer;width:28px;height:28px;border:1px solid var(--line);border-radius:5px;display:grid;place-items:center;font-family:var(--f-mono);font-size:.8rem}
+.rub .sc button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.answer{background:var(--sunk);border-radius:6px;padding:12px 14px;font-size:.9rem;line-height:1.65}
+.hl{background:var(--warn-soft);border-bottom:2px solid var(--warn)}
+.hlb{background:var(--bad-soft);border-bottom:2px solid var(--bad)}
+.timeline{display:flex;flex-direction:column;gap:6px;font-size:.84rem}
+.timeline div{display:grid;grid-template-columns:62px minmax(0,1fr);gap:10px}
+.timeline .t{font-family:var(--f-mono);color:var(--accent);cursor:pointer}
+
+/* blueprint */
+.pb{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.flag{border:1px solid var(--line);border-radius:var(--r);padding:16px;background:var(--surface);display:flex;flex-direction:column;gap:8px}
+.flag .tag{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase}
+.flag.hi{border-left:4px solid var(--bad)} .flag.md{border-left:4px solid var(--warn)} .flag.lo{border-left:4px solid var(--accent)}
+.persona{display:flex;flex-direction:column;gap:8px}
+.persona ul,.spec ul{margin:0;padding-left:18px;font-size:.88rem;display:flex;flex-direction:column;gap:3px}
+.spec{display:flex;flex-direction:column;gap:22px}
+pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;overflow-x:auto}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>window.mermaid&&mermaid.initialize({startOnLoad:false,theme:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'default')});</script>
+</head>
+<body>
+
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand"><b>CADCF</b><span>PORTAL UPGRADE · UX BLUEPRINT v1.1 · 14 OCT 2026</span></div>
+    <div class="roles" role="tablist" aria-label="Portal view">
+      <button role="tab" data-view="blueprint" aria-selected="true">Blueprint</button>
+      <button role="tab" data-view="public">Public site</button>
+      <button role="tab" data-view="candidate">Faculty (candidate)</button>
+      <button role="tab" data-view="admin">ISF admin</button>
+      <button role="tab" data-view="assessor">Assessor</button>
+      <button role="tab" data-view="spec">Build spec</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ===================== BLUEPRINT ===================== -->
+<section class="view" data-view="blueprint">
+  <div class="stack" style="gap:26px">
+    <div class="stack" style="max-width:820px">
+      <span class="eyebrow">For the ISF software team · Prepared for Pushkal Kapoor, Director</span>
+      <h1>CADCF portal upgrade: one standalone portal for faculty, ISF administrators and assessors</h1>
+      <p class="muted" style="font-size:1.02rem">This page is a working blueprint. Use the tabs above to click through every screen of the three user portals and the public SEO site. The <b>Build spec</b> tab carries the state machine, data model, roles matrix and integrations. Dashed amber chips mark <span class="chip ph">Placeholder</span> values the business still has to confirm.</p>
+    </div>
+
+    <div class="note info">
+      <b>Decisions agreed by Pushkal Kapoor, 14 Oct 2026.</b> The six design decisions below are approved and built into every screen of this blueprint. Business values marked as placeholders are still open.
+    </div>
+
+    <div class="pb">
+      <div class="flag hi"><span class="tag" style="color:var(--bad)">Agreed · Fee model</span><h4>Free account, then a paid access pass</h4><p class="muted">The Aug 2024 ISF announcement says faculty "can register free, view the standards and access learning materials". The brief now says ₹2,500 + GST for basic access. Agreed: registration is <b>free</b>; the ₹2,500 + GST <b>access pass</b> unlocks the standard, library and self-evaluation. Pass validity still to confirm.</p></div>
+      <div class="flag hi"><span class="tag" style="color:var(--bad)">Agreed · AI detection</span><h4>Never auto-fail on an AI score</h4><p class="muted">AI-text detectors have documented false-positive rates, and they are worse for non-native English writers, which is much of this cohort. Showing candidates a live "AI detected" meter also teaches them to paraphrase until it goes green. Blueprint design: paste blocked, typing telemetry captured, originality status shown to the candidate in plain terms, the numeric score visible only to assessors, and a human decision on every flag.</p></div>
+      <div class="flag hi"><span class="tag" style="color:var(--bad)">Agreed · Eligibility before payment</span><h4>Check credentials before taking the certification fee</h4><p class="muted">The brief has payment first, then admin review of credentials. That guarantees refunds and disputes when someone pays for Leadership and is only eligible for Basic. Blueprint flow: credentials → automatic pre-check → admin decision (approve / offer lower level / reject) → <b>then</b> payment.</p></div>
+      <div class="flag md"><span class="tag" style="color:var(--warn)">Agreed · SEO</span><h4>A subdomain of helms.in will not rank on its own</h4><p class="muted">The current site at cadcf.helms.in inherits HELMS's domain and has almost no indexable text. "Runs independently with its own SEO" needs its own domain (for example a cadcf domain), server-rendered public pages, and HELMS reduced to optional single sign-on.</p></div>
+      <div class="flag md"><span class="tag" style="color:var(--warn)">Agreed · Content security</span><h4>Private YouTube links leak</h4><p class="muted">"Private" YouTube videos need each viewer's Google account invited; "unlisted" ones can be forwarded to anyone. Neither suits a paid library. Use a domain-locked host (Vimeo, Bunny Stream, Mux) with signed URLs. The same applies to the standard: view-only with watermark deters sharing, but no web viewer can stop a screenshot.</p></div>
+      <div class="flag lo"><span class="tag" style="color:var(--accent)">Agreed · Scope</span><h4>Project assignment missing from the brief</h4><p class="muted">The published process lists objective and subjective assessment, <b>project assignments</b>, oral examination and live teaching assessment. The brief omits the project assignment. The blueprint keeps it as an optional stage, switchable per level in Admin › Settings.</p></div>
+    </div>
+
+    <div class="card stack">
+      <div class="row between"><h3>End-to-end candidate journey</h3><span class="chip acc">Order as briefed, with the eligibility gate moved before payment</span></div>
+      <div class="journey">
+        <div class="jst"><span class="k">01</span><b>Register</b>Account, email/phone verified, profile.</div>
+        <div class="jst"><span class="k">02</span><b>Access pass</b>₹2,500 + GST unlocks standard, videos, self-evaluation.</div>
+        <div class="jst"><span class="k">03</span><b>Self-evaluation</b>Rate 38 competencies, short quizzes, readiness report.</div>
+        <div class="jst"><span class="k">04</span><b>Apply</b>Pick Basic, Advanced or Leadership; upload credentials.</div>
+        <div class="jst"><span class="k">05</span><b>Eligibility</b>Auto pre-check, then ISF admin decision.</div>
+        <div class="jst"><span class="k">06</span><b>Pay fee</b>INR or USD via gateway; GST invoice.</div>
+        <div class="jst"><span class="k">07</span><b>Written test</b>Objective + subjective, Zoom-proctored, originality check.</div>
+        <div class="jst"><span class="k">08</span><b>Lecture</b>Upload recorded lecture; assessor remarks.</div>
+        <div class="jst"><span class="k">09</span><b>Panel interview</b>3–5 panellists, live, booked slot.</div>
+        <div class="jst"><span class="k">10</span><b>Certificate</b>Verifiable certificate, validity, CPD and renewal.</div>
+      </div>
+    </div>
+
+    <div class="grid g3">
+      <div class="card persona"><span class="eyebrow">Persona 1</span><h3>Faculty candidate</h3><p class="muted">Maritime trainer, instructor or lecturer, often at sea earlier in career, many outside India.</p><ul><li>Needs to know which level they can realistically attempt</li><li>Pays in INR or USD; wants a proper invoice</li><li>Works across time zones; books slots in their local time</li><li>Writes in English as a second language for many</li></ul></div>
+      <div class="card persona"><span class="eyebrow">Persona 2</span><h3>ISF admin team</h3><p class="muted">Runs the scheme: eligibility, scheduling, proctoring, assessor allocation, results, payments, content.</p><ul><li>Needs one queue showing what is waiting on ISF</li><li>Must schedule Zoom-proctored sessions and invigilators</li><li>Issues certificates only after moderation</li><li>Answers to ClassNK audits, so needs a full audit trail</li></ul></div>
+      <div class="card persona"><span class="eyebrow">Persona 3</span><h3>Assessor / panellist</h3><p class="muted">Senior faculty and industry experts marking scripts, reviewing lectures and sitting on interview panels.</p><ul><li>Marks against the standard's criteria, not opinion</li><li>Sees originality evidence, decides on it</li><li>Declares conflicts of interest before any allocation</li><li>Should see only what they are allocated (blind marking where possible)</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PUBLIC SITE ===================== -->
+<section class="view" data-view="public" hidden>
+  <div class="stack">
+    <div class="ux"><b>SEO</b>Server-rendered page on its own domain. Title tag: "CADCF – ClassNK-accredited certification for maritime faculty | ISF Group". Structured data: Organization, EducationalOccupationalCredential (×3 levels), Course (access pass), FAQPage. Separate indexable URLs: /standard, /levels/basic, /levels/advanced, /levels/leadership, /process, /fees, /verify, /faq.</div>
+    <div class="site">
+      <div class="site-nav">
+        <div class="row"><b style="font-family:var(--f-display);font-size:1.2rem;color:var(--navy)">CADCF</b><span class="muted" style="font-size:.78rem">by ISF Group Institute of Research and Education</span></div>
+        <nav aria-label="Public site"><a href="#public">The standard</a><a href="#public">Levels</a><a href="#public">Process</a><a href="#public">Fees</a><a href="#public">Verify a certificate</a><a href="#public">FAQ</a></nav>
+        <div class="row"><button class="btn sm" data-go="candidate">Log in</button><button class="btn sm primary" data-go="candidate">Register</button></div>
+      </div>
+      <div class="hero">
+        <div class="stack">
+          <span class="eyebrow">Continual Assessment, Development and Certification of Faculty</span>
+          <h1>The STCW of trainers and instructors.</h1>
+          <p class="lead">A certification standard for maritime faculty that goes past Train-the-Trainer courses. 38 competencies, three levels, assessed by written test, a recorded lecture and a live panel interview.</p>
+          <div class="row"><button class="btn primary" data-go="candidate">Start with self-evaluation</button><button class="btn">Read about the standard</button></div>
+          <div class="row" style="gap:16px;font-size:.84rem"><span><b>Accredited by ClassNK</b> under the NK Standard for Certification of Maritime Education &amp; Training Programs</span><a href="#public">View accreditation certificate</a></div>
+        </div>
+        <div class="seal">
+          <span class="eyebrow">38 competencies across 5 domains</span>
+          <div class="compass">
+            <div><b>D1</b>Course design</div><div><b>D2</b>Delivery</div><div><b>D3</b>Assessment</div><div><b>D4</b>Soft &amp; managerial</div><div><b>D5</b>AI · VR · AR</div>
+          </div>
+          <p class="muted" style="font-size:.84rem">Built on STCW 2010 (Manila Amendments), IMO Model Courses 6.09, 6.10 and 3.12, and Bloom's Taxonomy.</p>
+          <div class="ux"><b>Note</b>Use the official ClassNK mark only as permitted by ClassNK's logo-use terms; prototype shows text only.</div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="row between"><h2>Three levels of certification</h2><span class="chip ph">Certification fees: placeholder</span></div>
+        <div class="grid g3">
+          <div class="lvcard b"><span class="lv b">Basic</span><h3>For practising faculty</h3><ul><li>Delivers courses designed by others</li><li>Written test, lecture recording, panel interview</li><li>Suggested entry: TOTA / VICT or equivalent <span class="chip ph">Confirm</span></li></ul></div>
+          <div class="lvcard a"><span class="lv a">Advanced</span><h3>For course designers and lead instructors</h3><ul><li>Designs courses and assessments</li><li>Adds simulator briefing session (if opted)</li><li>Suggested entry: Basic + teaching hours <span class="chip ph">Confirm</span></li></ul></div>
+          <div class="lvcard l"><span class="lv l">Leadership</span><h3>For heads of training and academic leads</h3><ul><li>Leads faculty, QMS and curriculum</li><li>Panel interview weighted to leadership competencies</li><li>Suggested entry: Advanced + management role <span class="chip ph">Confirm</span></li></ul></div>
+        </div>
+      </div>
+      <div class="sec">
+        <h2>How certification works</h2>
+        <div class="steps">
+          <div><i>STEP 1</i><br><b>Register and get access</b><br><span class="muted">View the full standard, watch the learning library, take self-evaluations.</span></div>
+          <div><i>STEP 2</i><br><b>Apply for a level</b><br><span class="muted">Submit your credentials. ISF confirms eligibility before you pay.</span></div>
+          <div><i>STEP 3</i><br><b>Written assessment</b><br><span class="muted">Objective and subjective questions under live Zoom invigilation.</span></div>
+          <div><i>STEP 4</i><br><b>Recorded lecture</b><br><span class="muted">Upload a teaching session. Assessors review it against the standard.</span></div>
+          <div><i>STEP 5</i><br><b>Panel interview</b><br><span class="muted">A live interview with three to five panellists.</span></div>
+          <div><i>STEP 6</i><br><b>Certificate</b><br><span class="muted">A verifiable certificate with a public verification page.</span></div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="row between"><h2>Fees</h2><div class="seg" role="group" aria-label="Currency"><button data-cur="INR" aria-pressed="true">INR ₹</button><button data-cur="USD" aria-pressed="false">USD $</button></div></div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Item</th><th>What you get</th><th class="num">Fee</th><th class="num">Tax</th></tr></thead>
+          <tbody>
+            <tr><td><b>Access pass</b> (12 months <span class="chip ph">Confirm</span>)</td><td>Full standard (view only), learning library, self-evaluation tests</td><td class="num"><span data-inr="₹2,500" data-usd="$35">₹2,500</span> <span class="chip ph" data-usd-only hidden>USD rate TBC</span></td><td class="num" data-inr="+ 18% GST" data-usd="Zero-rated export*">+ 18% GST</td></tr>
+            <tr><td><span class="lv b">Basic</span> certification</td><td>Written test, lecture review, panel interview, certificate</td><td class="num"><span class="chip ph">TBC</span></td><td class="num" data-inr="+ 18% GST" data-usd="Zero-rated export*">+ 18% GST</td></tr>
+            <tr><td><span class="lv a">Advanced</span> certification</td><td>As Basic, plus simulator briefing option</td><td class="num"><span class="chip ph">TBC</span></td><td class="num" data-inr="+ 18% GST" data-usd="Zero-rated export*">+ 18% GST</td></tr>
+            <tr><td><span class="lv l">Leadership</span> certification</td><td>As Advanced, leadership-weighted panel</td><td class="num"><span class="chip ph">TBC</span></td><td class="num" data-inr="+ 18% GST" data-usd="Zero-rated export*">+ 18% GST</td></tr>
+          </tbody></table></div>
+        <small>*Overseas candidates paying in foreign currency: GST treatment depends on export-of-services rules and ISF's LUT status. Confirm with ISF's chartered accountant before go-live.</small>
+      </div>
+      <div class="sec">
+        <h2>Frequently asked</h2>
+        <details><summary>Can I download the standard?</summary><p>No. Registered members can read the complete standard online. Each page carries your name and member ID.</p></details>
+        <details><summary>What if I apply for a level I am not eligible for?</summary><p>ISF reviews your credentials before you pay the certification fee. If another level fits better, we will offer it to you.</p></details>
+        <details><summary>How is the written test supervised?</summary><p>You join a Zoom call, share your screen and keep your camera on. An ISF invigilator watches the session live.</p></details>
+        <details><summary>Can I use AI tools to write my answers?</summary><p>No. Answers must be your own writing. Pasting is disabled and every subjective answer goes through an originality check. Flags are reviewed by a human assessor, who may ask you about your answer in the interview.</p></details>
+        <details><summary>How does someone check my certificate?</summary><p>Each certificate has a QR code and number that open a public verification page.</p></details>
+      </div>
+      <div class="sec" style="font-size:.82rem;color:var(--muted)">
+        <div class="row between"><span>© 2026 ISF Software and Publications · CADCF is developed by IIRE, the research wing of ISF Group.</span><span>iireresearch@isfgroup.in</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CANDIDATE ===================== -->
+<section class="view" data-view="candidate" hidden>
+ <div class="shell">
+  <nav class="side" aria-label="Candidate screens">
+    <div class="who"><b>Capt. Meera Iyer</b><br><small>CADCF-M-01842 · Example data</small></div>
+    <button data-screen="c-dash" aria-selected="true">Dashboard</button>
+    <span class="grp">Prepare</span>
+    <button data-screen="c-std">The standard</button>
+    <button data-screen="c-lib">Learning library</button>
+    <button data-screen="c-self">Self-evaluation</button>
+    <span class="grp">Certify</span>
+    <button data-screen="c-apply">Apply for a level</button>
+    <button data-screen="c-pay">Payments <span class="chip warn">1</span></button>
+    <button data-screen="c-exam">Written assessment</button>
+    <button data-screen="c-lec">Lecture upload</button>
+    <button data-screen="c-int">Panel interview</button>
+    <button data-screen="c-res">Results &amp; certificate</button>
+    <span class="grp">Account</span>
+    <button data-screen="c-fb">Feedback</button>
+    <button data-screen="c-prof">Profile &amp; documents</button>
+  </nav>
+  <div>
+
+  <!-- dashboard -->
+  <div class="screen" data-screen="c-dash">
+    <div class="scr-head"><div><span class="eyebrow">Dashboard</span><h2>Good afternoon, Meera</h2></div><span class="chip acc">Access pass active until 12 Sep 2027</span></div>
+    <div class="card stack">
+      <div class="row between"><h3>Your <span class="lv a">Advanced</span> certification</h3><span class="chip warn">Action needed: pay certification fee</span></div>
+      <div class="journey">
+        <div class="jst done"><span class="k">✓ 03 Sep</span><b>Access pass</b></div>
+        <div class="jst done"><span class="k">✓ 21 Sep</span><b>Self-evaluation</b>34 / 38 rated</div>
+        <div class="jst done"><span class="k">✓ 02 Oct</span><b>Applied</b>Advanced</div>
+        <div class="jst done"><span class="k">✓ 09 Oct</span><b>Eligible</b>Approved by ISF</div>
+        <div class="jst now"><span class="k">NOW</span><b>Pay fee</b><button class="btn sm primary" data-jump="c-pay" style="margin-top:6px">Pay now</button></div>
+        <div class="jst"><span class="k">NEXT</span><b>Written test</b>Book a slot</div>
+        <div class="jst"><span class="k">—</span><b>Lecture</b></div>
+        <div class="jst"><span class="k">—</span><b>Interview</b></div>
+        <div class="jst"><span class="k">—</span><b>Certificate</b></div>
+      </div>
+    </div>
+    <div class="grid g3">
+      <div class="card stack"><span class="eyebrow">Readiness</span><h3>Strongest domain: Delivery</h3><p class="muted">Lowest self-rating in D5 (AI, VR, AR). 3 videos recommended.</p><button class="btn sm" data-jump="c-lib">Open recommendations</button></div>
+      <div class="card stack"><span class="eyebrow">Messages from ISF</span><p><b>Eligibility approved.</b> Your credentials support Advanced. Pay within 30 days to hold this decision.</p><small>ISF Admin · 9 Oct 2026</small></div>
+      <div class="card stack"><span class="eyebrow">Learning</span><p><b>11 of 24</b> videos watched</p><div class="bar"><i style="width:46%"></i></div><button class="btn sm" data-jump="c-lib">Continue watching</button></div>
+    </div>
+    <div class="ux"><b>UX</b>One "next action" per stage, always top of dashboard. Every status chip uses the same wording as the admin queue so support calls refer to the same thing.</div>
+  </div>
+
+  <!-- standard viewer -->
+  <div class="screen" data-screen="c-std" hidden>
+    <div class="scr-head"><div><span class="eyebrow">The standard · Edition 1.2 <span class="chip ph">Confirm</span></span><h2>CADCF Standard</h2></div><div class="row"><span class="chip">View only</span><span class="chip acc">ClassNK accredited</span></div></div>
+    <div class="viewer">
+      <div class="toc" aria-label="Contents">
+        <a href="#candidate">1 Why CADCF</a><a href="#candidate">2 Scope</a><a href="#candidate">3 The CADCF format</a>
+        <a href="#candidate" class="on">D1 Course design &amp; development</a><a href="#candidate">&nbsp;&nbsp;C1.1 Training needs analysis</a><a href="#candidate">&nbsp;&nbsp;C1.2 Learning objectives</a><a href="#candidate">&nbsp;&nbsp;C1.3 Session planning</a>
+        <a href="#candidate">D2 Course delivery</a><a href="#candidate">D3 Assessment development &amp; execution</a><a href="#candidate">D4 Soft, managerial &amp; attitudinal</a><a href="#candidate">D5 Integrating AI, VR, AR</a><a href="#candidate">Annex: evaluation criteria</a>
+      </div>
+      <div>
+        <div class="vtool"><span>Page 14 of 112</span><span>·</span><span>Zoom 100%</span><span>·</span><span>Search</span><span style="margin-left:auto">Download, print and copy disabled</span></div>
+        <div class="page">
+          <div class="wm">MEERA IYER · CADCF-M-01842
+14-10-2026 15:42 IST</div>
+          <span class="eyebrow">Domain 1 · Competency C1.2</span>
+          <h3 style="margin-block:6px 12px">Formulating learning objectives</h3>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Level</th><th>Knowledge, understanding and proficiency</th><th>Method of demonstrating</th></tr></thead>
+            <tbody>
+              <tr><td><span class="lv b">Basic</span></td><td>Writes objectives that state observable performance for a single session.</td><td>Written test; lecture recording</td></tr>
+              <tr><td><span class="lv a">Advanced</span></td><td>Maps objectives to STCW competence tables and Bloom's levels across a course.</td><td>Written test; project; interview</td></tr>
+              <tr><td><span class="lv l">Leadership</span></td><td>Reviews and approves objectives across a faculty's programmes.</td><td>Interview; portfolio evidence</td></tr>
+            </tbody></table></div>
+          <p class="muted" style="margin-top:12px;font-size:.84rem">Illustrative text only. The build loads real content from the standard managed in Admin › Content.</p>
+        </div>
+      </div>
+    </div>
+    <div class="ux"><b>Build</b>Render server-side to images or PDF.js with a signed, short-lived URL; no raw PDF reaches the browser. Dynamic watermark: name, member ID, timestamp. Disable context menu and text selection. Log page views per user (supports ClassNK audits and leak tracing).</div>
+  </div>
+
+  <!-- library -->
+  <div class="screen" data-screen="c-lib" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Learning library</span><h2>24 videos · 6 reading packs</h2></div><div class="row"><select id="lib-filter" aria-label="Filter by domain" style="width:auto"><option>All domains</option><option>D1 Course design</option><option>D2 Delivery</option><option>D3 Assessment</option><option>D4 Soft skills</option><option>D5 AI · VR · AR</option></select></div></div>
+    <div class="grid g4">
+      <div class="vid"><div class="thumb"><span>18:20</span></div><div class="meta"><span class="eyebrow">D5 · Recommended</span><b>Using generative AI to draft, not to think</b><div class="bar"><i style="width:0%"></i></div></div></div>
+      <div class="vid"><div class="thumb"><span>24:05</span></div><div class="meta"><span class="eyebrow">D5 · Recommended</span><b>Simulator briefing with VR scenarios</b><div class="bar"><i style="width:30%"></i></div></div></div>
+      <div class="vid"><div class="thumb"><span>12:48</span></div><div class="meta"><span class="eyebrow">D3</span><b>Writing objective questions without cue leakage</b><div class="bar"><i style="width:100%"></i></div></div></div>
+      <div class="vid"><div class="thumb"><span>31:10</span></div><div class="meta"><span class="eyebrow">D1</span><b>From STCW tables to session plans</b><div class="bar"><i style="width:100%"></i></div></div></div>
+    </div>
+    <div class="ux"><b>Build</b>Video host with domain lock and signed playback URLs. Track watch progress per user. Recommendations come from the lowest self-evaluation domains.</div>
+  </div>
+
+  <!-- self evaluation -->
+  <div class="screen" data-screen="c-self" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Self-evaluation · not graded</span><h2>Rate yourself against each competency</h2></div><span class="chip">34 of 38 rated</span></div>
+    <div class="card stack">
+      <span class="eyebrow">D3 · C3.4 Conducting practical assessments</span>
+      <p>Which statement best describes your current practice?</p>
+      <label class="opt"><input type="radio" name="se1"> I follow assessment checklists prepared by others.</label>
+      <label class="opt"><input type="radio" name="se1" checked> I design checklists and marking criteria for my own sessions.</label>
+      <label class="opt"><input type="radio" name="se1"> I design assessment systems and train other assessors to use them.</label>
+      <div class="row between"><small>Maps to: Basic · <b>Advanced</b> · Leadership</small><div class="row"><button class="btn sm">Previous</button><button class="btn sm primary">Save and next</button></div></div>
+    </div>
+    <div class="card stack">
+      <h3>Readiness report</h3>
+      <div class="funnel">
+        <div><span>D1 Course design</span><i style="width:78%"></i><span class="num">78%</span></div>
+        <div><span>D2 Delivery</span><i style="width:86%"></i><span class="num">86%</span></div>
+        <div><span>D3 Assessment</span><i style="width:71%"></i><span class="num">71%</span></div>
+        <div><span>D4 Soft &amp; managerial</span><i style="width:64%"></i><span class="num">64%</span></div>
+        <div><span>D5 AI · VR · AR</span><i style="width:42%"></i><span class="num">42%</span></div>
+      </div>
+      <p class="muted">Indicated level: <span class="lv a">Advanced</span>. This is guidance for you. It does not decide eligibility.</p>
+    </div>
+  </div>
+
+  <!-- apply -->
+  <div class="screen" data-screen="c-apply" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Apply for certification · step 1 of 3</span><h2>Choose your level</h2></div></div>
+    <div class="grid g3" id="lvl-pick">
+      <label class="pick"><input type="radio" name="lvl" value="Basic"><div class="lvcard b"><span class="lv b">Basic</span><b>Practising faculty</b><small>Suggested: TOTA/VICT + 1 yr teaching</small></div></label>
+      <label class="pick"><input type="radio" name="lvl" value="Advanced" checked><div class="lvcard a"><span class="lv a">Advanced</span><b>Designers and lead instructors</b><small>Suggested: 3 yrs + 500 teaching hrs</small><span class="chip acc">Matches your self-evaluation</span></div></label>
+      <label class="pick"><input type="radio" name="lvl" value="Leadership"><div class="lvcard l"><span class="lv l">Leadership</span><b>Heads of training</b><small>Suggested: 7 yrs + management role</small></div></label>
+    </div>
+    <div class="card stack">
+      <h3>Step 2 · Your credentials</h3>
+      <div class="grid g2">
+        <div><label for="ap-role">Current role</label><input id="ap-role" type="text" value="Senior Faculty, Nautical Studies"></div>
+        <div><label for="ap-inst">Institute</label><input id="ap-inst" type="text" value="Example Maritime Academy, Chennai"></div>
+        <div><label for="ap-yrs">Years teaching</label><input id="ap-yrs" type="number" value="6"></div>
+        <div><label for="ap-hrs">Teaching hours (last 3 years)</label><input id="ap-hrs" type="number" value="1150"></div>
+        <div><label for="ap-coc">Highest CoC / qualification</label><select id="ap-coc"><option>Master (FG)</option><option>Chief Engineer (MEO Class I)</option><option>Postgraduate degree</option><option>Other</option></select></div>
+        <div><label for="ap-tt">Trainer / assessor courses</label><select id="ap-tt"><option>TOTA + AECS</option><option>VICT</option><option>None</option></select></div>
+      </div>
+      <div><label for="ap-why">Why are you applying at this level? (max 250 words)</label><textarea id="ap-why">I design the bridge resource management course at our academy and lead a team of four instructors…</textarea></div>
+      <div class="row"><span class="chip ok">CoC.pdf</span><span class="chip ok">TOTA_cert.pdf</span><span class="chip ok">Employer_letter.pdf</span><button class="btn sm">Upload document</button></div>
+    </div>
+    <div class="card stack">
+      <h3>Step 3 · Automatic pre-check</h3>
+      <div class="check"><span class="ic ok">✓</span>Years of teaching meets the Advanced guide (6 ≥ 3)</div>
+      <div class="check"><span class="ic ok">✓</span>Teaching hours meet the Advanced guide (1,150 ≥ 500)</div>
+      <div class="check"><span class="ic warn">!</span>Employer letter does not state teaching hours. ISF may ask for confirmation.</div>
+      <p class="muted">Rules are guidance for ISF reviewers. ISF makes the final decision and may offer a different level. You pay the certification fee only after approval.</p>
+      <div class="row"><button class="btn primary" id="ap-submit">Submit for eligibility review</button><span class="muted" id="ap-msg"></span></div>
+    </div>
+  </div>
+
+  <!-- payments -->
+  <div class="screen" data-screen="c-pay" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Payments</span><h2>Pay your certification fee</h2></div><div class="seg" role="group" aria-label="Currency"><button data-cur="INR" aria-pressed="true">INR ₹</button><button data-cur="USD" aria-pressed="false">USD $</button></div></div>
+    <div class="grid g2">
+      <div class="card stack">
+        <h3><span class="lv a">Advanced</span> certification</h3>
+        <table class="sum"><tbody>
+          <tr><td>Certification fee <span class="chip ph">Placeholder</span></td><td class="num" data-inr="₹15,000.00" data-usd="$180.00">₹15,000.00</td></tr>
+          <tr><td data-inr="GST @ 18% (CGST 9% + SGST 9%)" data-usd="GST (export of services)">GST @ 18% (CGST 9% + SGST 9%)</td><td class="num" data-inr="₹2,700.00" data-usd="$0.00">₹2,700.00</td></tr>
+          <tr class="tot"><td>Total</td><td class="num" data-inr="₹17,700.00" data-usd="$180.00">₹17,700.00</td></tr>
+        </tbody></table>
+        <div><label for="gstin">GSTIN for invoice (optional, for employer-paid)</label><input id="gstin" type="text" placeholder="27ABCDE1234F1Z5"></div>
+        <button class="btn primary" id="open-pay">Proceed to payment</button>
+        <small>Currency is set by billing country; INR for India, USD elsewhere. Gateway shown is a test mock.</small>
+      </div>
+      <div class="card stack">
+        <h3>Payment history</h3>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Date</th><th>Item</th><th class="num">Amount</th><th>Invoice</th></tr></thead>
+          <tbody><tr><td>03 Sep 2026</td><td>Access pass</td><td class="num">₹2,950.00</td><td><button class="btn sm">View</button></td></tr></tbody>
+        </table></div>
+        <div class="ux"><b>Rules</b>Approved eligibility held for 30 days <span class="chip ph">Confirm</span>. Refund policy page linked here. Employer-paid option generates a pro-forma invoice for the employer.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- exam -->
+  <div class="screen" data-screen="c-exam" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Written assessment · Advanced · Session CAD-W-1027</span><h2>Part B · Subjective</h2></div><div class="row"><span class="chip ok"><span class="dot"></span> Invigilator connected on Zoom</span><span class="chip warn mono">01:12:40 left</span></div></div>
+    <div class="exam">
+      <div class="stack">
+        <div class="card stack">
+          <span class="eyebrow">Question 14 of 20 · C3.2 · 10 marks</span>
+          <p><b>A cadet passes your ECDIS practical checklist but cannot explain why a safety contour was set at 12 m. Describe how you would redesign the assessment so that understanding, not only procedure, is assessed.</b></p>
+          <textarea id="ans" style="min-height:200px" aria-label="Your answer">I would add an oral questioning element at the end of the practical, linked to each critical checklist item. For the safety contour, the cadet would be asked</textarea>
+          <div class="row between"><small id="wc">Words: 38 · Autosaved 15:41</small><div class="row"><button class="btn sm">Flag for review</button><button class="btn sm primary">Save and next</button></div></div>
+        </div>
+        <div class="note" id="paste-note" hidden><b>Pasting is turned off for this assessment.</b> Type your answer in your own words. This attempt has been noted for the invigilator.</div>
+      </div>
+      <aside class="stack">
+        <div class="card stack"><h4>Questions</h4>
+          <div class="qnav"><span class="a">1</span><span class="a">2</span><span class="a">3</span><span class="a">4</span><span class="a">5</span><span class="a">6</span><span class="a">7</span><span class="a">8</span><span class="a">9</span><span class="a">10</span><span class="a">11</span><span class="a">12</span><span class="a">13</span><span class="c">14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span></div>
+          <small>Part A objective: 40 MCQs, auto-marked</small></div>
+        <div class="card integrity"><h4>Originality</h4>
+          <p id="orig-txt">Your answers are checked for originality when you save. Write in your own words; spelling and grammar are not penalised.</p>
+          <div class="row"><span class="chip ok" id="orig-chip">Looks like your own writing</span></div>
+          <button class="btn sm" id="orig-demo">Demo: simulate a flagged answer</button>
+          <small>The detailed score goes to assessors, who make the decision. An AI flag alone never fails you.</small></div>
+      </aside>
+    </div>
+    <div class="ux"><b>Proctoring</b>Kept as briefed: ISF shares a Zoom link, candidate shares screen + camera, invigilator watches live. Portal adds: lockdown of copy/paste, tab-switch and focus-loss logging, keystroke cadence capture, and an invigilator log the admin sees. Auto AI-proctoring left out, as briefed.</div>
+  </div>
+
+  <!-- lecture -->
+  <div class="screen" data-screen="c-lec" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Delivery assessment</span><h2>Upload your recorded lecture</h2></div><span class="chip">Opens after written test is passed</span></div>
+    <div class="grid g2">
+      <div class="card stack">
+        <div><label for="lec-type">Session type</label><select id="lec-type"><option>Theory session</option><option>Simulator briefing (optional at Advanced)</option></select></div>
+        <div><label for="lec-topic">Topic and learning objectives</label><textarea id="lec-topic" style="min-height:90px">Passage planning with ECDIS: setting safety parameters. Objectives: by the end, cadets will…</textarea></div>
+        <div style="border:2px dashed var(--line);border-radius:8px;padding:26px;text-align:center" class="stack"><b>Drop video file here</b><small>MP4 or MOV · 20–45 minutes · up to 4 GB · resumable upload</small><button class="btn sm" style="align-self:center">Choose file</button></div>
+        <div class="check"><input type="checkbox" id="lec-dec" style="margin-top:4px"><label for="lec-dec" style="font-weight:400;color:var(--ink)">I confirm this is my own unedited delivery and that learners in the recording consented to being filmed.</label></div>
+      </div>
+      <div class="card stack"><h3>What assessors look for</h3><ul style="margin:0;padding-left:18px"><li>Objectives stated and met</li><li>Questioning and learner engagement</li><li>Use of aids, simulator or technology</li><li>Checks of understanding</li><li>Time management</li></ul><small>Rubric criteria load from the standard for your level.</small></div>
+    </div>
+  </div>
+
+  <!-- interview -->
+  <div class="screen" data-screen="c-int" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Panel interview</span><h2>Book your interview slot</h2></div><div><label for="tz">Your time zone</label><select id="tz" style="width:auto"><option>Asia/Kolkata (IST)</option><option>Asia/Singapore (SGT)</option><option>Europe/London (BST)</option></select></div></div>
+    <div class="card stack">
+      <p class="muted">Panel of 3–5 assessors · 45 minutes · Zoom · camera required. You can rebook once, up to 48 hours before.</p>
+      <div class="slots" id="slots">
+        <button class="slot" aria-pressed="false"><b>Tue 03 Nov</b>10:30 IST</button>
+        <button class="slot" aria-pressed="false"><b>Tue 03 Nov</b>15:00 IST</button>
+        <button class="slot" disabled><b>Wed 04 Nov</b>11:00 IST</button>
+        <button class="slot" aria-pressed="false"><b>Thu 05 Nov</b>17:30 IST</button>
+        <button class="slot" aria-pressed="false"><b>Sat 07 Nov</b>10:00 IST</button>
+        <button class="slot" aria-pressed="false"><b>Mon 09 Nov</b>14:00 IST</button>
+      </div>
+      <div class="row"><button class="btn primary" id="book" disabled>Confirm slot</button><span class="muted" id="book-msg">Select a slot</span></div>
+    </div>
+  </div>
+
+  <!-- results -->
+  <div class="screen" data-screen="c-res" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Results &amp; certificate · example of a completed record</span><h2>Basic certification · awarded</h2></div><span class="chip ok">Certified</span></div>
+    <div class="grid g2">
+      <div class="card stack">
+        <div class="tbl-wrap"><table><thead><tr><th>Component</th><th class="num">Score</th><th>Result</th></tr></thead><tbody>
+          <tr><td>Written · objective</td><td class="num">31 / 40</td><td><span class="chip ok">Pass</span></td></tr>
+          <tr><td>Written · subjective</td><td class="num">68%</td><td><span class="chip ok">Pass</span></td></tr>
+          <tr><td>Lecture review</td><td class="num">Competent</td><td><span class="chip ok">Pass</span></td></tr>
+          <tr><td>Panel interview</td><td class="num">3.6 / 5</td><td><span class="chip ok">Pass</span></td></tr>
+        </tbody></table></div>
+        <p class="muted">Pass marks and weightings <span class="chip ph">Confirm from standard</span></p>
+      </div>
+      <div class="card stack" style="border:2px solid var(--basic)">
+        <span class="eyebrow">Certificate No. CADCF-B-2026-00417</span>
+        <h3>Meera Iyer</h3><p>has met the CADCF Standard at <span class="lv b">Basic</span> level</p>
+        <small>Issued 18 Mar 2026 · Valid to 17 Mar 2029 <span class="chip ph">Validity TBC</span></small>
+        <div class="row"><button class="btn sm">View certificate</button><button class="btn sm">Add to LinkedIn</button><button class="btn sm">Copy verification link</button></div>
+      </div>
+    </div>
+    <div class="ux"><b>Failed component</b>Show which component, assessor remarks, re-attempt rules and fee (the published process says re-certification guidelines exist; they need to be written into Settings).</div>
+  </div>
+
+  <!-- feedback -->
+  <div class="screen" data-screen="c-fb" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Feedback on the standard</span><h2>Help improve CADCF</h2></div></div>
+    <div class="card stack">
+      <div class="grid g2"><div><label for="fb-sec">Section of the standard</label><select id="fb-sec"><option>D5 Integrating AI, VR, AR</option><option>General</option></select></div><div><label for="fb-type">Type</label><select id="fb-type"><option>Suggestion</option><option>Error or ambiguity</option><option>Portal issue</option></select></div></div>
+      <div><label for="fb-txt">Your feedback</label><textarea id="fb-txt" placeholder="What should change and why?"></textarea></div>
+      <button class="btn primary" style="align-self:flex-start">Send feedback</button>
+      <small>Feedback feeds ISF's management review of the standard.</small>
+    </div>
+  </div>
+
+  <!-- profile -->
+  <div class="screen" data-screen="c-prof" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Profile</span><h2>Profile &amp; documents</h2></div></div>
+    <div class="grid g2">
+      <div class="card stack"><div><label for="p-n">Name as on certificate</label><input id="p-n" type="text" value="Meera Iyer"></div><div><label for="p-c">Country</label><select id="p-c"><option>India</option><option>Singapore</option><option>Philippines</option></select></div><div><label for="p-e">Email</label><input id="p-e" type="email" value="meera.iyer@example.com"></div><div class="row"><span class="chip ok">Email verified</span><span class="chip ok">Mobile verified</span></div></div>
+      <div class="card stack"><h4>Sign-in</h4><p class="muted">Email + password with OTP, or "Sign in with HELMS" for existing HELMS users.</p><h4>Privacy</h4><p class="muted">Download my data · Delete account (after certificate retention period).</p></div>
+    </div>
+  </div>
+
+  </div>
+ </div>
+</section>
+
+<!-- ===================== ADMIN ===================== -->
+<section class="view" data-view="admin" hidden>
+ <div class="shell">
+  <nav class="side" aria-label="Admin screens">
+    <div class="who"><b>ISF Admin Console</b><br><small>Role: Scheme Manager</small></div>
+    <button data-screen="a-dash" aria-selected="true">Overview</button>
+    <span class="grp">Pipeline</span>
+    <button data-screen="a-elig">Eligibility review <span class="chip warn">7</span></button>
+    <button data-screen="a-sched">Sessions &amp; proctoring</button>
+    <button data-screen="a-alloc">Assessor allocation <span class="chip warn">4</span></button>
+    <button data-screen="a-integ">Integrity cases <span class="chip bad">2</span></button>
+    <button data-screen="a-res">Results &amp; certificates</button>
+    <span class="grp">Business</span>
+    <button data-screen="a-pay">Payments &amp; invoices</button>
+    <button data-screen="a-content">Content</button>
+    <span class="grp">System</span>
+    <button data-screen="a-users">Users &amp; roles</button>
+    <button data-screen="a-settings">Scheme settings</button>
+    <button data-screen="a-audit">Audit log</button>
+  </nav>
+  <div>
+
+  <div class="screen" data-screen="a-dash">
+    <div class="scr-head"><div><span class="eyebrow">Overview · example figures</span><h2>What is waiting on ISF</h2></div><select style="width:auto" aria-label="Period"><option>Last 90 days</option><option>This year</option></select></div>
+    <div class="grid g4">
+      <div class="card kpi"><small>Eligibility decisions due</small><b>7</b><span class="chip warn">2 older than 5 days</span></div>
+      <div class="card kpi"><small>Scripts awaiting marking</small><b>12</b><span class="chip">4 unallocated</span></div>
+      <div class="card kpi"><small>Interviews this week</small><b>5</b><span class="chip ok">All panels full</span></div>
+      <div class="card kpi"><small>Revenue (INR equiv.)</small><b class="num">₹6.4L</b><span class="chip">82 payments</span></div>
+    </div>
+    <div class="grid g2">
+      <div class="card stack"><h3>Pipeline</h3>
+        <div class="funnel">
+          <div><span>Access passes</span><i style="width:100%"></i><span class="num">214</span></div>
+          <div><span>Self-evaluation done</span><i style="width:71%"></i><span class="num">152</span></div>
+          <div><span>Applied</span><i style="width:30%"></i><span class="num">64</span></div>
+          <div><span>Paid certification</span><i style="width:24%"></i><span class="num">51</span></div>
+          <div><span>Written passed</span><i style="width:16%"></i><span class="num">34</span></div>
+          <div><span>Certified</span><i style="width:10%"></i><span class="num">22</span></div>
+        </div></div>
+      <div class="card stack"><h3>Needs attention</h3>
+        <div class="check"><span class="ic bad">!</span>Integrity case CAD-W-1019: subjective Q7 flagged, assessor decision pending</div>
+        <div class="check"><span class="ic warn">!</span>Session 22 Oct 10:00 has no invigilator assigned</div>
+        <div class="check"><span class="ic warn">!</span>3 eligibility-approved candidates have not paid in 25+ days</div>
+        <div class="check"><span class="ic ok">✓</span>Standard Edition 1.2 published; 0 open feedback items marked "error"</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" data-screen="a-elig" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Eligibility review</span><h2>Applications awaiting a decision</h2></div><div class="row"><input type="text" placeholder="Search name, ID, institute" aria-label="Search" style="width:220px"><select style="width:auto" aria-label="Level"><option>All levels</option><option>Basic</option><option>Advanced</option><option>Leadership</option></select></div></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Candidate</th><th>Level</th><th>Pre-check</th><th>Country</th><th>Waiting</th><th>Status</th></tr></thead>
+      <tbody id="elig-rows">
+        <tr class="click" data-c="Rohan Desai"><td><b>Rohan Desai</b><br><small>CADCF-M-02011</small></td><td><span class="lv l">Leadership</span></td><td><span class="chip bad">2 rules unmet</span></td><td>India</td><td class="num">6 d</td><td><span class="chip warn">Review</span></td></tr>
+        <tr class="click" data-c="Ana Reyes"><td><b>Ana Reyes</b><br><small>CADCF-M-02019</small></td><td><span class="lv a">Advanced</span></td><td><span class="chip ok">All met</span></td><td>Philippines</td><td class="num">2 d</td><td><span class="chip warn">Review</span></td></tr>
+        <tr class="click" data-c="Imran Sheikh"><td><b>Imran Sheikh</b><br><small>CADCF-M-02024</small></td><td><span class="lv b">Basic</span></td><td><span class="chip warn">1 to verify</span></td><td>UAE</td><td class="num">1 d</td><td><span class="chip">Info requested</span></td></tr>
+      </tbody></table></div>
+    <div class="drawer" id="elig-drawer">
+      <div class="row between"><div><span class="eyebrow">Application · applied for</span><h3 id="ed-name">Rohan Desai · <span class="lv l">Leadership</span></h3></div><span class="chip warn">Review</span></div>
+      <div class="grid g2">
+        <dl class="kv"><dt>Role</dt><dd>Faculty, Marine Engineering</dd><dt>Years teaching</dt><dd>4</dd><dt>Hours (3 yrs)</dt><dd>780</dd><dt>CoC</dt><dd>MEO Class I</dd><dt>Courses</dt><dd>TOTA, AECS</dd><dt>Self-eval</dt><dd>Indicates Advanced</dd></dl>
+        <div class="stack">
+          <div class="check"><span class="ic bad">✕</span>Leadership guide: 7+ years teaching (has 4)</div>
+          <div class="check"><span class="ic bad">✕</span>Leadership guide: management responsibility (none evidenced)</div>
+          <div class="check"><span class="ic ok">✓</span>Advanced guide met</div>
+          <div class="row"><span class="chip ok">CoC.pdf</span><span class="chip ok">TOTA.pdf</span><span class="chip">Statement</span></div>
+        </div>
+      </div>
+      <div><label for="ed-note">Message to candidate</label><textarea id="ed-note" style="min-height:80px">Thank you for applying. Your teaching record supports Advanced level now. We would welcome a Leadership application once you have management responsibility evidenced.</textarea></div>
+      <div class="row"><button class="btn primary" data-toast="Approved at applied level. Candidate notified to pay.">Approve as applied</button><button class="btn" data-toast="Offer sent: Advanced. Candidate can accept and pay, or withdraw.">Offer Advanced instead</button><button class="btn" data-toast="Information request sent. Clock paused.">Request information</button><button class="btn danger" data-toast="Application declined. Candidate notified with reason.">Decline</button></div>
+      <small>Decision, reason and reviewer are written to the audit log. Two-person approval for Leadership <span class="chip ph">Optional setting</span>.</small>
+    </div>
+  </div>
+
+  <div class="screen" data-screen="a-sched" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Sessions &amp; proctoring</span><h2>Written-test sessions</h2></div><button class="btn primary" data-toast="New session created; Zoom meeting generated.">New session</button></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Session</th><th>Date (IST)</th><th>Level</th><th class="num">Seats</th><th>Invigilator</th><th>Zoom</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">CAD-W-1027</td><td>20 Oct · 10:00</td><td><span class="lv a">Adv</span></td><td class="num">4 / 6</td><td>S. Nair</td><td><span class="chip ok">Link sent</span></td><td><span class="chip acc">Scheduled</span></td></tr>
+        <tr><td class="mono">CAD-W-1028</td><td>22 Oct · 10:00</td><td><span class="lv b">Basic</span></td><td class="num">6 / 6</td><td><select style="width:auto" aria-label="Assign invigilator"><option>Unassigned</option><option>S. Nair</option><option>P. Rao</option></select></td><td><span class="chip warn">Not sent</span></td><td><span class="chip warn">Needs invigilator</span></td></tr>
+        <tr><td class="mono">CAD-W-1019</td><td>08 Oct · 15:00</td><td><span class="lv a">Adv</span></td><td class="num">5 / 6</td><td>P. Rao</td><td><span class="chip">Ended</span></td><td><span class="chip">Invigilator log filed</span></td></tr>
+      </tbody></table></div>
+    <div class="card stack"><h3>Invigilator live log · CAD-W-1027 (opens during session)</h3>
+      <div class="timeline"><div><span class="t">10:04</span><span>All 4 candidates admitted; screens shared; ID checked on camera</span></div><div><span class="t">10:31</span><span>Ana Reyes · focus left the test window for 6 s (system event)</span></div><div><span class="t">10:32</span><span>Invigilator note: "Candidate explained notification popup; resumed."</span></div><div><span class="t">10:47</span><span>Imran Sheikh · paste blocked (system event)</span></div></div>
+      <div class="row"><input type="text" placeholder="Add invigilator note…" aria-label="Invigilator note" style="flex:1;min-width:0"><button class="btn sm">Add</button><button class="btn sm danger">Suspend candidate</button></div>
+    </div>
+    <div class="ux"><b>Zoom</b>Server-to-server Zoom app creates one meeting per session, with waiting room and registration; join links are emailed and shown in the candidate's portal 30 min before start. Recording to cloud kept for the retention period.</div>
+  </div>
+
+  <div class="screen" data-screen="a-alloc" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Assessor allocation</span><h2>Allocate marking, lecture reviews and panels</h2></div></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Item</th><th>Candidate</th><th>Type</th><th>Suggested assessor</th><th>Conflicts</th><th></th></tr></thead>
+      <tbody>
+        <tr><td class="mono">W-1027-03</td><td>Candidate #3 (blind)</td><td>Subjective script</td><td>Dr K. Menon · load 3</td><td><span class="chip ok">None</span></td><td><button class="btn sm primary" data-toast="Allocated. Assessor notified; due in 5 working days.">Allocate</button></td></tr>
+        <tr><td class="mono">L-0412</td><td>Meera Iyer</td><td>Lecture review</td><td>Capt. A. Shah · load 1</td><td><span class="chip bad">Same institute</span></td><td><button class="btn sm">Pick another</button></td></tr>
+        <tr><td class="mono">P-0088</td><td>Ana Reyes</td><td>Panel (needs 3–5)</td><td>Menon, Shah, Rao</td><td><span class="chip ok">None</span></td><td><button class="btn sm primary" data-toast="Panel of 3 confirmed; calendar invites sent.">Confirm panel</button></td></tr>
+      </tbody></table></div>
+    <div class="ux"><b>Rules</b>Auto-suggest by level competence, workload and declared conflicts. Written scripts are blind (candidate shown as number). Second marking for borderline scores (within 5% of pass) <span class="chip ph">Confirm</span>.</div>
+  </div>
+
+  <div class="screen" data-screen="a-integ" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Integrity cases</span><h2>Originality and conduct flags</h2></div></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Case</th><th>Source</th><th>Evidence</th><th>Assessor view</th><th>Outcome</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">IC-031</td><td>CAD-W-1019 · Q7</td><td>AI-likelihood 82%; 410 words typed in 3 min; no edits</td><td>"Likely not own work"</td><td><select style="width:auto" aria-label="Outcome"><option>Pending</option><option>Probe in interview</option><option>Void answer</option><option>Void attempt</option><option>No action</option></select></td></tr>
+        <tr><td class="mono">IC-032</td><td>CAD-W-1019 · Q12</td><td>AI-likelihood 61%; normal typing; ESL writing pattern</td><td>"Own work; detector noise"</td><td><span class="chip ok">No action</span></td></tr>
+      </tbody></table></div>
+    <div class="note info">Typing telemetry (time, edits, pauses, pastes blocked) is stronger evidence than the detector score. Show both side by side; outcomes require a named reviewer and reason.</div>
+  </div>
+
+  <div class="screen" data-screen="a-res" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Results &amp; certificates</span><h2>Moderation before award</h2></div></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Candidate</th><th>Level</th><th>Written</th><th>Lecture</th><th>Panel</th><th>Moderation</th><th></th></tr></thead>
+      <tbody>
+        <tr><td><b>Ana Reyes</b></td><td><span class="lv a">Adv</span></td><td class="num">74%</td><td>Competent</td><td class="num">3.9</td><td><span class="chip ok">Agreed</span></td><td><button class="btn sm primary" data-toast="Certificate CADCF-A-2026-00051 issued; verification page live.">Issue certificate</button></td></tr>
+        <tr><td><b>Vikram Joshi</b></td><td><span class="lv b">Basic</span></td><td class="num">58%</td><td>Not yet competent</td><td>—</td><td><span class="chip bad">Fail · lecture</span></td><td><button class="btn sm">Send result</button></td></tr>
+      </tbody></table></div>
+    <div class="ux"><b>Certificate</b>Generated PDF with unique number, QR to public /verify page, level, issue and expiry dates, ClassNK accreditation statement. Revocation supported and shown on /verify.</div>
+  </div>
+
+  <div class="screen" data-screen="a-pay" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Payments &amp; invoices</span><h2>Transactions</h2></div><button class="btn">Export for accounts (CSV)</button></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Date</th><th>Candidate</th><th>Item</th><th>Gateway</th><th class="num">Amount</th><th class="num">GST</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>12 Oct</td><td>Ana Reyes</td><td>Advanced cert.</td><td>Stripe (test)</td><td class="num">$180.00</td><td class="num">—</td><td><span class="chip ok">Captured</span></td></tr>
+        <tr><td>11 Oct</td><td>Imran Sheikh</td><td>Access pass</td><td>Razorpay (test)</td><td class="num">₹2,500.00</td><td class="num">₹450.00</td><td><span class="chip ok">Captured</span></td></tr>
+        <tr><td>10 Oct</td><td>Rahul Verma</td><td>Basic cert.</td><td>Razorpay (test)</td><td class="num">₹—</td><td class="num">—</td><td><span class="chip bad">Failed</span></td></tr>
+        <tr><td>04 Oct</td><td>K. Pillai</td><td>Access pass</td><td>Razorpay (test)</td><td class="num">₹2,500.00</td><td class="num">₹450.00</td><td><span class="chip warn">Refund requested</span></td></tr>
+      </tbody></table></div>
+  </div>
+
+  <div class="screen" data-screen="a-content" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Content</span><h2>Standard, videos, question banks</h2></div></div>
+    <div class="grid g3">
+      <div class="card stack"><h4>Standard editions</h4><p>Edition 1.2 · <span class="chip ok">Published</span></p><p>Edition 1.3 draft · <span class="chip">Draft</span></p><small>Versioned; candidates are assessed against the edition current when they applied.</small><button class="btn sm">Upload new edition</button></div>
+      <div class="card stack"><h4>Learning library</h4><p>24 videos · 6 packs</p><small>Each item tagged to domain, competency and level.</small><button class="btn sm">Add video</button></div>
+      <div class="card stack"><h4>Question banks</h4><p>Objective: 612 items · Subjective: 148 items</p><small>Tagged by competency and level; random draw per blueprint; items retired after exposure limit.</small><button class="btn sm">Import from Excel</button></div>
+    </div>
+  </div>
+
+  <div class="screen" data-screen="a-users" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Users &amp; roles</span><h2>Staff and assessors</h2></div><button class="btn primary">Invite user</button></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Name</th><th>Roles</th><th>Levels qualified</th><th>2FA</th></tr></thead>
+      <tbody>
+        <tr><td>S. Nair</td><td>Scheme Manager, Invigilator</td><td>—</td><td><span class="chip ok">On</span></td></tr>
+        <tr><td>Dr K. Menon</td><td>Assessor, Panellist</td><td><span class="lv b">B</span> <span class="lv a">A</span> <span class="lv l">L</span></td><td><span class="chip ok">On</span></td></tr>
+        <tr><td>Capt. A. Shah</td><td>Assessor</td><td><span class="lv b">B</span> <span class="lv a">A</span></td><td><span class="chip warn">Off</span></td></tr>
+      </tbody></table></div>
+  </div>
+
+  <div class="screen" data-screen="a-settings" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Scheme settings</span><h2>Rules the business owns</h2></div></div>
+    <div class="grid g2">
+      <div class="card stack"><h4>Fees</h4><div class="grid g2"><div><label for="s1">Access pass (INR)</label><input id="s1" type="text" value="2500"></div><div><label for="s2">Access pass (USD)</label><input id="s2" type="text" value="TBC"></div><div><label for="s3">GST rate</label><input id="s3" type="text" value="18%"></div><div><label for="s4">Access validity (months)</label><input id="s4" type="text" value="12"></div></div></div>
+      <div class="card stack"><h4>Stages per level</h4>
+        <div class="tbl-wrap"><table><thead><tr><th>Stage</th><th>B</th><th>A</th><th>L</th></tr></thead><tbody>
+          <tr><td>Written test</td><td>✓</td><td>✓</td><td>✓</td></tr><tr><td>Project assignment</td><td>—</td><td>✓</td><td>✓</td></tr><tr><td>Lecture recording</td><td>✓</td><td>✓</td><td>✓</td></tr><tr><td>Simulator briefing</td><td>—</td><td>Opt</td><td>Opt</td></tr><tr><td>Panel interview</td><td>✓</td><td>✓</td><td>✓</td></tr>
+        </tbody></table></div><span class="chip ph">Illustrative; confirm from standard</span></div>
+      <div class="card stack"><h4>Thresholds</h4><div class="grid g2"><div><label for="s5">Written pass mark</label><input id="s5" type="text" value="60%"></div><div><label for="s6">Panel pass (avg of 5)</label><input id="s6" type="text" value="3.0"></div><div><label for="s7">AI flag threshold</label><input id="s7" type="text" value="70%"></div><div><label for="s8">Re-attempt wait (days)</label><input id="s8" type="text" value="30"></div></div></div>
+      <div class="card stack"><h4>Eligibility guides</h4><small>Rule builder: field, operator, value, per level. Rules produce guidance only; a person decides.</small><div class="tbl-wrap"><table><tbody><tr><td>Advanced</td><td>years_teaching ≥ 3 AND hours_3y ≥ 500</td></tr><tr><td>Leadership</td><td>years_teaching ≥ 7 AND has_management_role</td></tr></tbody></table></div></div>
+    </div>
+  </div>
+
+  <div class="screen" data-screen="a-audit" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Audit log</span><h2>Every decision, by whom, when</h2></div><button class="btn">Export for ClassNK audit</button></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Record</th></tr></thead><tbody>
+      <tr><td class="mono">14 Oct 15:02</td><td>S. Nair</td><td>Offered Advanced instead of Leadership</td><td class="mono">APP-2011</td></tr>
+      <tr><td class="mono">14 Oct 11:40</td><td>Dr K. Menon</td><td>Submitted marks, script W-1019-02</td><td class="mono">ATT-7781</td></tr>
+      <tr><td class="mono">13 Oct 18:15</td><td>System</td><td>Paste blocked during session</td><td class="mono">CAD-W-1019</td></tr>
+    </tbody></table></div>
+  </div>
+
+  </div>
+ </div>
+</section>
+
+<!-- ===================== ASSESSOR ===================== -->
+<section class="view" data-view="assessor" hidden>
+ <div class="shell">
+  <nav class="side" aria-label="Assessor screens">
+    <div class="who"><b>Dr K. Menon</b><br><small>Assessor · Panellist</small></div>
+    <button data-screen="s-queue" aria-selected="true">My queue <span class="chip warn">5</span></button>
+    <button data-screen="s-mark">Mark written script</button>
+    <button data-screen="s-lec">Review lecture</button>
+    <button data-screen="s-int">Panel interview</button>
+    <button data-screen="s-coi">Conflicts &amp; profile</button>
+  </nav>
+  <div>
+  <div class="screen" data-screen="s-queue">
+    <div class="scr-head"><div><span class="eyebrow">My queue</span><h2>5 items allocated to you</h2></div></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Item</th><th>Type</th><th>Level</th><th>Due</th><th></th></tr></thead><tbody>
+      <tr><td class="mono">W-1019-02</td><td>Subjective script · candidate #2</td><td><span class="lv a">Adv</span></td><td>16 Oct</td><td><button class="btn sm primary" data-jump="s-mark">Mark</button></td></tr>
+      <tr><td class="mono">L-0409</td><td>Lecture · 34 min</td><td><span class="lv b">Basic</span></td><td>18 Oct</td><td><button class="btn sm" data-jump="s-lec">Review</button></td></tr>
+      <tr><td class="mono">P-0088</td><td>Panel interview · Ana Reyes</td><td><span class="lv a">Adv</span></td><td>03 Nov 10:30</td><td><button class="btn sm" data-jump="s-int">Open sheet</button></td></tr>
+    </tbody></table></div>
+  </div>
+
+  <div class="screen" data-screen="s-mark" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Script W-1019-02 · candidate #2 (blind) · Advanced</span><h2>Question 7 · C3.2 · 10 marks</h2></div><span class="chip bad">Originality flag</span></div>
+    <div class="grid g2">
+      <div class="stack">
+        <div class="answer">To assess underpinning knowledge, <span class="hlb">the assessment framework should be holistically restructured to integrate multifaceted questioning strategies that seamlessly align with Bloom's higher-order cognitive domains</span>. For ECDIS I will ask cadet why the contour is 12 m and what happen if draft change. <span class="hl">Furthermore, leveraging scenario-based evaluations fosters deeper comprehension and robust competency demonstration.</span></div>
+        <div class="card integrity">
+          <h4>Originality evidence (assessor only)</h4>
+          <dl class="kv"><dt>AI-likelihood</dt><dd><b>82%</b> (above 70% flag)</dd><dt>Typing</dt><dd>410 words in 3 min 05 s · 2 edits</dd><dt>Paste attempts</dt><dd>1 blocked at 15:21</dd><dt>Focus loss</dt><dd>2 × (11 s, 40 s)</dd><dt>Similarity</dt><dd>9% to other scripts</dd></dl>
+          <small>Highlighted spans: red = high AI-likelihood, amber = moderate. Mixed register (fluent jargon beside ESL phrasing) is a cue to probe, not proof.</small>
+        </div>
+      </div>
+      <div class="card stack">
+        <h4>Rubric · from the standard</h4>
+        <div class="rub" id="rub">
+          <span>Identifies gap between procedure and understanding</span><div class="sc" data-max="3"></div>
+          <span>Proposes valid assessment method (questioning, scenario)</span><div class="sc" data-max="4"></div>
+          <span>Links to STCW competence / KUP</span><div class="sc" data-max="3"></div>
+        </div>
+        <div class="row between"><b>Total</b><b class="num" id="rub-tot">0 / 10</b></div>
+        <div><label for="int-dec">Integrity decision</label><select id="int-dec"><option>Probe in interview</option><option>No concern</option><option>Refer to ISF: void answer</option></select></div>
+        <div><label for="rem">Remarks to candidate (shown after moderation)</label><textarea id="rem" style="min-height:80px">Correct idea of adding oral questioning. Show how questions map to the competence table.</textarea></div>
+        <button class="btn primary" data-toast="Marks submitted. Integrity note sent to ISF case IC-031.">Submit marks</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" data-screen="s-lec" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Lecture L-0409 · Basic · 34 min</span><h2>Review recorded lecture</h2></div></div>
+    <div class="grid g2">
+      <div class="stack"><div class="vid"><div class="thumb"><span>12:40 / 34:02</span></div></div>
+        <div class="card stack"><h4>Time-stamped remarks</h4>
+          <div class="timeline"><div><span class="t">02:15</span><span>Objectives stated clearly and written on board.</span></div><div><span class="t">12:40</span><span>Long monologue, no check of understanding for 9 min.</span></div><div><span class="t">27:05</span><span>Good use of a near-miss case to link theory to practice.</span></div></div>
+          <div class="row"><input type="text" placeholder="Remark at 12:40…" aria-label="New remark" style="flex:1;min-width:0"><button class="btn sm">Add at current time</button></div></div></div>
+      <div class="card stack"><h4>Delivery criteria</h4>
+        <div class="rub" id="rub2">
+          <span>Objectives stated and achieved</span><div class="sc" data-max="4"></div>
+          <span>Questioning and engagement</span><div class="sc" data-max="4"></div>
+          <span>Use of aids / technology</span><div class="sc" data-max="4"></div>
+          <span>Checks of understanding</span><div class="sc" data-max="4"></div>
+          <span>Time management</span><div class="sc" data-max="4"></div>
+        </div>
+        <div><label for="lec-v">Overall</label><select id="lec-v"><option>Competent</option><option>Not yet competent</option></select></div>
+        <button class="btn primary" data-toast="Lecture review submitted.">Submit review</button></div>
+    </div>
+  </div>
+
+  <div class="screen" data-screen="s-int" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Panel P-0088 · Ana Reyes · Advanced · 03 Nov 10:30 IST</span><h2>Interview scoring sheet</h2></div><button class="btn">Join Zoom</button></div>
+    <div class="grid g2">
+      <div class="card stack"><h4>Briefing pack</h4><ul style="margin:0;padding-left:18px"><li>Written: 74% · weakest C5.1 (AI integration)</li><li>Lecture: Competent · remark on long monologue at 12:40</li><li><b>Probe:</b> integrity flag on Q7, ask her to explain her answer in her own words</li></ul><h4>Suggested questions</h4><ol style="margin:0;padding-left:18px;font-size:.88rem"><li>Walk us through how you would redesign the ECDIS assessment you wrote about.</li><li>How do you use AI tools in your own lesson preparation, and where do you stop?</li></ol></div>
+      <div class="card stack"><h4>Your scores (independent until all submit)</h4>
+        <div class="rub" id="rub3"><span>D1 Course design</span><div class="sc" data-max="5"></div><span>D3 Assessment</span><div class="sc" data-max="5"></div><span>D4 Professional conduct</span><div class="sc" data-max="5"></div><span>D5 Technology</span><div class="sc" data-max="5"></div></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Panellist</th><th>Status</th></tr></thead><tbody><tr><td>Dr K. Menon (chair)</td><td><span class="chip warn">Scoring</span></td></tr><tr><td>Capt. A. Shah</td><td><span class="chip ok">Submitted</span></td></tr><tr><td>P. Rao</td><td><span class="chip">Pending</span></td></tr></tbody></table></div>
+        <small>Scores of other panellists are revealed to the chair only after all submit; chair records the consensus and any spread &gt; 1.5 points needs a note.</small>
+        <button class="btn primary" data-toast="Scores locked. Waiting for 1 panellist.">Submit scores</button></div>
+    </div>
+  </div>
+
+  <div class="screen" data-screen="s-coi" hidden>
+    <div class="scr-head"><div><span class="eyebrow">Profile</span><h2>Conflicts of interest</h2></div></div>
+    <div class="card stack"><p class="muted">Declare institutes and people you cannot assess fairly. Allocation skips these automatically.</p>
+      <div class="row"><span class="chip">Example Maritime Academy, Mumbai</span><span class="chip">Former student: R. Desai</span><button class="btn sm">Add declaration</button></div>
+      <div class="check"><input type="checkbox" id="coi-ok" checked style="margin-top:4px"><label for="coi-ok" style="font-weight:400;color:var(--ink)">I confirm my declarations are current (renew every 6 months).</label></div></div>
+  </div>
+  </div>
+ </div>
+</section>
+
+<!-- ===================== SPEC ===================== -->
+<section class="view" data-view="spec" hidden>
+ <div class="spec">
+  <div class="stack" style="max-width:820px"><span class="eyebrow">Build spec</span><h1>What the software team needs to build it</h1><p class="muted">Stack-neutral. Values marked as placeholders come from the business, not from engineering.</p></div>
+
+  <div class="stack"><h2>1. Application status (state machine)</h2>
+<pre class="mermaid">
+stateDiagram-v2
+  [*] --> Draft
+  Draft --> Submitted : candidate submits credentials
+  Submitted --> InfoRequested : admin asks for documents
+  InfoRequested --> Submitted : candidate responds
+  Submitted --> Approved : admin approves
+  Submitted --> OfferedOtherLevel : admin offers different level
+  OfferedOtherLevel --> Approved : candidate accepts
+  Submitted --> Declined
+  Approved --> Paid : payment captured
+  Approved --> Lapsed : not paid in 30 days
+  Paid --> WrittenBooked
+  WrittenBooked --> WrittenMarked : marking + moderation
+  WrittenMarked --> LectureSubmitted : pass
+  WrittenMarked --> Failed : fail
+  LectureSubmitted --> LectureReviewed
+  LectureReviewed --> InterviewBooked : competent
+  LectureReviewed --> Failed : not yet competent
+  InterviewBooked --> Moderation
+  Moderation --> Certified
+  Moderation --> Failed
+  Failed --> Paid : re-attempt (fee and wait rules)
+  Certified --> Expired : validity ends
+</pre>
+  <small>A project-assignment stage slots between WrittenMarked and LectureSubmitted when enabled for the level.</small></div>
+
+  <div class="stack"><h2>2. Core data model</h2>
+  <div class="tbl-wrap"><table><thead><tr><th>Entity</th><th>Key fields</th><th>Notes</th></tr></thead><tbody>
+    <tr><td><b>User</b></td><td>id, name, email, phone, country, roles[], sso_provider, 2fa</td><td>One table for candidates, staff, assessors; role-based access</td></tr>
+    <tr><td><b>CandidateProfile</b></td><td>member_no, institute, role, years_teaching, hours_3y, coc, trainer_courses</td><td>Member number printed on watermark and certificates</td></tr>
+    <tr><td><b>Document</b></td><td>owner, type, file_ref, verified_by, verified_at</td><td>Private object storage, virus scan on upload</td></tr>
+    <tr><td><b>AccessPass</b></td><td>user, payment, starts, ends</td><td>Gates standard, library, self-evaluation</td></tr>
+    <tr><td><b>SelfEvaluation</b></td><td>user, competency, response, score, date</td><td>Feeds readiness report; never used for eligibility</td></tr>
+    <tr><td><b>Application</b></td><td>user, level_applied, level_approved, status, standard_edition, statement</td><td>Status per state machine above</td></tr>
+    <tr><td><b>EligibilityReview</b></td><td>application, rule_results JSON, decision, reason, reviewer</td><td>Optional second reviewer for Leadership</td></tr>
+    <tr><td><b>Payment / Invoice</b></td><td>user, item, currency, amount, tax_breakup, gateway_ref, status, invoice_no, gstin</td><td>Sequential GST invoice numbering per financial year</td></tr>
+    <tr><td><b>Session</b></td><td>level, start, seats, invigilator, zoom_meeting_id, join_url</td><td>Written-test sitting</td></tr>
+    <tr><td><b>Attempt / Response</b></td><td>application, session, question, answer, autosaves[], typing_metrics, ai_score, similarity</td><td>Questions drawn per blueprint from the bank</td></tr>
+    <tr><td><b>IntegrityEvent / Case</b></td><td>attempt, type (paste, focus, ai_flag, invigilator_note), evidence, outcome, reviewer</td><td>Outcome needs named reviewer + reason</td></tr>
+    <tr><td><b>LectureSubmission</b></td><td>application, type, video_ref, objectives, consent</td><td>Resumable upload; transcoded for review</td></tr>
+    <tr><td><b>Review</b></td><td>target (response / lecture / interview), assessor, rubric_scores JSON, remarks, timestamps[]</td><td>Blind where target is a written response</td></tr>
+    <tr><td><b>Interview / PanelMember</b></td><td>application, slot, zoom, panellists[], chair, consensus</td><td>3–5 panellists</td></tr>
+    <tr><td><b>Certificate</b></td><td>number, user, level, issued, expires, status, qr_token</td><td>Public /verify/{token}; revocable</td></tr>
+    <tr><td><b>Content</b></td><td>standard editions, videos, question items (competency, level, type, exposure)</td><td>Versioned</td></tr>
+    <tr><td><b>Feedback, AuditLog</b></td><td>actor, action, record, before/after, time</td><td>Audit log is append-only</td></tr>
+  </tbody></table></div></div>
+
+  <div class="stack"><h2>3. Roles and permissions</h2>
+  <div class="tbl-wrap"><table><thead><tr><th>Capability</th><th>Candidate</th><th>Invigilator</th><th>Assessor</th><th>Scheme Manager</th><th>Finance</th><th>Super Admin</th></tr></thead><tbody>
+    <tr><td>View standard / library</td><td>With pass</td><td>✓</td><td>✓</td><td>✓</td><td>—</td><td>✓</td></tr>
+    <tr><td>Decide eligibility</td><td>—</td><td>—</td><td>—</td><td>✓</td><td>—</td><td>✓</td></tr>
+    <tr><td>Run sessions, log events</td><td>—</td><td>✓</td><td>—</td><td>✓</td><td>—</td><td>✓</td></tr>
+    <tr><td>Mark / review / score</td><td>—</td><td>—</td><td>Allocated only</td><td>—</td><td>—</td><td>—</td></tr>
+    <tr><td>See AI score and typing data</td><td>Status only</td><td>—</td><td>Allocated only</td><td>✓</td><td>—</td><td>✓</td></tr>
+    <tr><td>Issue / revoke certificate</td><td>—</td><td>—</td><td>—</td><td>✓</td><td>—</td><td>✓</td></tr>
+    <tr><td>Refunds, invoices</td><td>Own</td><td>—</td><td>—</td><td>View</td><td>✓</td><td>✓</td></tr>
+    <tr><td>Settings, users</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>✓</td></tr>
+  </tbody></table></div></div>
+
+  <div class="stack"><h2>4. Integrations</h2>
+  <div class="tbl-wrap"><table><thead><tr><th>Need</th><th>Options to evaluate</th><th>Build note</th></tr></thead><tbody>
+    <tr><td>Payments INR + USD</td><td>Razorpay (INR: UPI, cards, net banking; international cards) · PayPal or Stripe for USD, subject to availability for ISF's entity</td><td>Build a gateway adapter; ship with a mock gateway first (as in this prototype). Webhooks are the source of truth, not the browser redirect.</td></tr>
+    <tr><td>AI-text detection</td><td>Copyleaks, Originality.ai, GPTZero, Turnitin (API terms vary)</td><td>Pilot on 50 known-human answers from Indian maritime faculty before choosing; measure false positives. Store score + version.</td></tr>
+    <tr><td>Plagiarism / similarity</td><td>Same vendors; plus in-house comparison across candidates' scripts</td><td>Cross-candidate similarity catches shared answers that AI detectors miss.</td></tr>
+    <tr><td>Proctoring</td><td>Zoom Meetings API (server-to-server OAuth)</td><td>Auto-create meetings per session; waiting room; cloud recording link stored on the session.</td></tr>
+    <tr><td>Video library</td><td>Vimeo (domain-level privacy), Bunny Stream, Mux</td><td>Signed URLs, domain lock, watch progress via player events.</td></tr>
+    <tr><td>Lecture uploads</td><td>S3-compatible storage, multipart / tus resumable upload</td><td>Transcode to streaming format for assessors; large files from ships and slow links.</td></tr>
+    <tr><td>Standard viewer</td><td>PDF.js or server-rendered page images</td><td>Signed short-lived URLs, watermark, no download/print.</td></tr>
+    <tr><td>Email / SMS / WhatsApp</td><td>SES or SendGrid; MSG91 or Gupshup</td><td>Template per event (below).</td></tr>
+    <tr><td>Single sign-on</td><td>HELMS as an OIDC provider</td><td>Optional login path; CADCF keeps its own accounts.</td></tr>
+    <tr><td>SEO / analytics</td><td>Search Console, GA4 or Plausible</td><td>Server-rendered public pages, sitemap.xml, structured data.</td></tr>
+  </tbody></table></div></div>
+
+  <div class="grid g2">
+    <div class="card stack"><h3>5. Notifications</h3><ul>
+      <li>Access pass purchased → receipt + GST invoice</li><li>Application submitted → candidate + ISF admin</li><li>Eligibility decision / offer / info request → candidate</li><li>Payment captured or failed → candidate; captured → admin</li><li>Session booked; reminder 24 h and 30 min with Zoom link</li><li>Allocation → assessor, with due date; overdue reminder</li><li>Result per stage → candidate after moderation</li><li>Certificate issued; expiry reminder 90 and 30 days out</li></ul></div>
+    <div class="card stack"><h3>6. Non-functional</h3><ul>
+      <li>Times stored in UTC, shown in each user's time zone</li><li>2FA mandatory for staff and assessors</li><li>Exam autosave every 15 s; resume after disconnect</li><li>Works on 2 Mbps connections; lecture upload resumable</li><li>Data protection: India DPDP Act 2023; GDPR for EU candidates</li><li>Retention policy for recordings and scripts <span class="chip ph">Set with ClassNK requirements</span></li><li>WCAG 2.1 AA for public and candidate pages</li></ul></div>
+  </div>
+
+  <div class="stack"><h2>7. Suggested phasing</h2>
+  <div class="tbl-wrap"><table><thead><tr><th>Phase</th><th>Scope</th><th>Exit test</th></tr></thead><tbody>
+    <tr><td><b>1 · Foundation</b></td><td>Public SEO site, accounts, access pass with mock gateway, standard viewer, library, self-evaluation</td><td>A new user registers, pays (mock), reads the standard and watches a video</td></tr>
+    <tr><td><b>2 · Apply and pay</b></td><td>Applications, eligibility review, real gateway INR + USD, invoices, admin overview</td><td>Full application round trip including "offer other level"</td></tr>
+    <tr><td><b>3 · Assess</b></td><td>Sessions + Zoom, exam engine, question bank, originality checks, marking, integrity cases</td><td>A proctored mock sitting with 5 staff acting as candidates</td></tr>
+    <tr><td><b>4 · Certify</b></td><td>Lecture upload/review, panel interviews, moderation, certificates, /verify, audit export</td><td>End-to-end pilot with 5–10 real candidates</td></tr>
+  </tbody></table></div></div>
+
+  <div class="card stack"><h3>8. Open questions for ISF</h3><ol style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px">
+    <li>Access pass validity (12 months assumed).</li>
+    <li>Certification fees per level, in INR and USD.</li>
+    <li>Eligibility rules per level as written in the standard.</li>
+    <li>Pass marks, weightings and the re-attempt / re-certification rules.</li>
+    <li>Certificate validity and renewal (CPD hours?).</li>
+    <li>Is the project assignment in or out, and at which levels?</li>
+    <li>Domain name for the standalone portal.</li>
+    <li>ClassNK requirements on record retention and logo use.</li>
+  </ol></div>
+ </div>
+</section>
+
+</main>
+
+<!-- dummy gateway -->
+<div class="modal-bg" id="pay-modal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pm-t">
+    <header><div><span class="eyebrow">Test mode · no money moves</span><h3 id="pm-t">Secure payment</h3></div><button class="btn sm" id="pm-x" aria-label="Close">✕</button></header>
+    <div class="body" id="pm-body">
+      <div class="row between"><span>CADCF Advanced certification</span><b class="num" data-inr="₹17,700.00" data-usd="$180.00">₹17,700.00</b></div>
+      <div class="tabs" role="tablist" id="pm-tabs"></div>
+      <div id="pm-fields" class="stack"></div>
+      <button class="btn primary" id="pm-pay">Pay</button>
+      <small>Mock of the gateway's hosted checkout. Real build redirects or opens the gateway's own widget.</small>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+  const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+  let cur='INR';
+  function toast(t){const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(e._t);e._t=setTimeout(()=>e.hidden=true,2800)}
+  function showView(v){
+    if(!$('.view[data-view="'+v+'"]')) v='blueprint';
+    $$('.roles button').forEach(b=>b.setAttribute('aria-selected',b.dataset.view===v));
+    $$('.view').forEach(s=>s.hidden=s.dataset.view!==v);
+    window.scrollTo({top:0});
+    if(v==='spec'&&window.mermaid&&!window._mm){window._mm=1;mermaid.run({querySelector:'pre.mermaid'})}
+  }
+  $$('.roles button').forEach(b=>b.addEventListener('click',()=>{showView(b.dataset.view);try{history.replaceState(null,'','#'+b.dataset.view)}catch(e){}}));
+  $$('[data-go]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.go)));
+  function showScreen(id){
+    const scr=$('.screen[data-screen="'+id+'"]'); if(!scr) return;
+    const view=scr.closest('.view');
+    $$('.side button',view).forEach(b=>b.setAttribute('aria-selected',b.dataset.screen===id));
+    $$('.screen',view).forEach(s=>s.hidden=s.dataset.screen!==id);
+    view.scrollIntoView({block:'start'});window.scrollTo({top:0});
+  }
+  $$('.side button').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.screen)));
+  $$('[data-jump]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.jump)));
+  const h=(location.hash||'').slice(1); if(h) showView(h);
+
+  // currency
+  function setCur(c){cur=c;
+    $$('[data-cur]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.cur===c));
+    $$('[data-inr]').forEach(e=>e.textContent=c==='INR'?e.dataset.inr:e.dataset.usd);
+    $$('[data-usd-only]').forEach(e=>e.hidden=c!=='USD');
+  }
+  $$('[data-cur]').forEach(b=>b.addEventListener('click',()=>setCur(b.dataset.cur)));
+
+  // toasts
+  $$('[data-toast]').forEach(b=>b.addEventListener('click',()=>toast(b.dataset.toast)));
+
+  // apply
+  $('#ap-submit').addEventListener('click',()=>{const l=$('input[name=lvl]:checked').value;$('#ap-msg').textContent='Submitted for '+l+'. ISF will reply within 5 working days.';toast('Application submitted · admin team notified')});
+
+  // payment modal
+  const methods={INR:['UPI','Card','Net banking'],USD:['Card','PayPal']};
+  const fields={UPI:'<div><label for="pm-upi">UPI ID</label><input id="pm-upi" type="text" value="meera@okbank"></div>',
+    Card:'<div><label for="pm-cn">Card number</label><input id="pm-cn" type="text" value="4111 1111 1111 1111"></div><div class="grid g2"><div><label for="pm-ex">Expiry</label><input id="pm-ex" type="text" value="12/29"></div><div><label for="pm-cv">CVV</label><input id="pm-cv" type="text" value="123"></div></div>',
+    'Net banking':'<div><label for="pm-bk">Bank</label><select id="pm-bk"><option>HDFC Bank</option><option>ICICI Bank</option><option>State Bank of India</option></select></div>',
+    PayPal:'<p class="muted">You will be sent to PayPal to approve the payment.</p>'};
+  function renderTabs(){const t=$('#pm-tabs');t.innerHTML='';methods[cur].forEach((m,i)=>{const b=document.createElement('button');b.textContent=m;b.setAttribute('role','tab');b.setAttribute('aria-selected',i===0);b.onclick=()=>{$$('button',t).forEach(x=>x.setAttribute('aria-selected',x===b));$('#pm-fields').innerHTML=fields[m]};t.appendChild(b)});$('#pm-fields').innerHTML=fields[methods[cur][0]]}
+  let bodyHTML=null;
+  $('#open-pay').addEventListener('click',()=>{const m=$('#pay-modal');if(bodyHTML)$('#pm-body').innerHTML=bodyHTML;else bodyHTML=$('#pm-body').innerHTML;bindPay();setCur(cur);renderTabs();m.hidden=false});
+  function bindPay(){$('#pm-pay').onclick=()=>{const amt=$('#pm-body [data-inr]').textContent;$('#pm-body').innerHTML='<div class="stack" style="align-items:flex-start"><span class="chip ok">Payment successful (test)</span><h3>'+amt+' received</h3><p class="muted">Ref TXN-TEST-'+Math.floor(Math.random()*9e5+1e5)+'. Invoice emailed. Next: book your written test.</p><button class="btn primary" id="pm-done">Book written test</button></div>';$('#pm-done').onclick=()=>{$('#pay-modal').hidden=true;showScreen('c-exam')}}}
+  $('#pm-x').addEventListener('click',()=>$('#pay-modal').hidden=true);
+  $('#pay-modal').addEventListener('click',e=>{if(e.target.id==='pay-modal')e.currentTarget.hidden=true});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#pay-modal').hidden=true});
+
+  // exam
+  const ans=$('#ans');
+  function wc(){$('#wc').textContent='Words: '+(ans.value.trim().split(/\s+/).filter(Boolean).length)+' · Autosaved just now'}
+  ans.addEventListener('input',wc);
+  ans.addEventListener('paste',e=>{e.preventDefault();$('#paste-note').hidden=false;toast('Paste blocked · logged for invigilator')});
+  let flagged=false;
+  $('#orig-demo').addEventListener('click',()=>{flagged=!flagged;const c=$('#orig-chip');
+    if(flagged){c.className='chip warn';c.textContent='Some passages need review';$('#orig-txt').textContent='Parts of this answer read as if they may not be your own writing. You can revise it now. An assessor will look at it either way and may ask you about it in your interview.';$('#orig-demo').textContent='Demo: reset to normal'}
+    else{c.className='chip ok';c.textContent='Looks like your own writing';$('#orig-txt').textContent='Your answers are checked for originality when you save. Write in your own words; spelling and grammar are not penalised.';$('#orig-demo').textContent='Demo: simulate a flagged answer'}});
+
+  // slots
+  $$('#slots .slot:not([disabled])').forEach(s=>s.addEventListener('click',()=>{$$('#slots .slot').forEach(x=>x.setAttribute('aria-pressed',x===s));$('#book').disabled=false;$('#book-msg').textContent='Selected: '+s.textContent.trim()}));
+  $('#book').addEventListener('click',()=>{toast('Interview booked · panel and calendar invites sent');$('#book-msg').textContent='Booked. Zoom link appears here 30 minutes before.'});
+
+  // eligibility drawer
+  $$('#elig-rows tr').forEach(r=>r.addEventListener('click',()=>{$('#ed-name').firstChild.textContent=r.dataset.c+' · ';$('#elig-drawer').scrollIntoView({behavior:'smooth',block:'nearest'})}));
+
+  // rubrics
+  $$('.rub').forEach(rub=>{
+    const tot=rub.id==='rub'?$('#rub-tot'):null;
+    $$('.sc',rub).forEach(sc=>{const max=+sc.dataset.max;for(let i=0;i<=max;i++){const b=document.createElement('button');b.textContent=i;b.setAttribute('aria-pressed','false');b.setAttribute('aria-label','Score '+i);b.onclick=()=>{$$('button',sc).forEach(x=>x.setAttribute('aria-pressed',x===b));sc.dataset.v=i;if(tot){const s=$$('.sc',rub).reduce((a,x)=>a+(+x.dataset.v||0),0);tot.textContent=s+' / 10'}};sc.appendChild(b)}});
+  });
+})();
+</script>
+
+</body>
+</html>
